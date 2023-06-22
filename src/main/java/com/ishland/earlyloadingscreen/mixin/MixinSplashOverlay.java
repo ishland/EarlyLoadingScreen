@@ -1,6 +1,7 @@
 package com.ishland.earlyloadingscreen.mixin;
 
 import com.ishland.earlyloadingscreen.LoadingScreenManager;
+import com.ishland.earlyloadingscreen.mixin.access.IMinecraftClient;
 import com.ishland.earlyloadingscreen.mixin.access.ISimpleResourceReload;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.SplashOverlay;
@@ -45,7 +46,7 @@ public class MixinSplashOverlay {
             }
             final MinecraftClient client = MinecraftClient.getInstance();
             if (client != null) {
-                gltSetText(renderLoop.fpsText, "%d fps".formatted(client.getCurrentFps()));
+                gltSetText(renderLoop.fpsText, "%d fps".formatted(IMinecraftClient.getCurrentFps()));
             } else {
                 gltSetText(renderLoop.fpsText, "");
             }

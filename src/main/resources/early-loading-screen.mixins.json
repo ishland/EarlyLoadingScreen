@@ -16,6 +16,8 @@
     "MixinMinecraftClient",
     "MixinModelLoader",
     "MixinSplashOverlay",
+    "MixinTextureManager",
+    "access.IMinecraftClient",
     "MixinSpriteLoader",
     "MixinTextureManager",
     "MixinTextureStitcher",

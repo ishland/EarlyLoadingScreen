@@ -1,7 +1,6 @@
 package com.ishland.earlyloadingscreen.render;
 
-import org.joml.Vector4f;
-import org.lwjgl.opengl.GL32;
+import net.minecraft.util.math.Vector4f;
 
 import java.io.Closeable;
 import java.nio.ByteBuffer;

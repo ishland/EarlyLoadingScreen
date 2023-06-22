@@ -75,7 +75,7 @@ public abstract class MixinModelLoader {
         }
     }
 
-    @Redirect(method = "bake", at = @At(value = "INVOKE", target = "Ljava/util/Set;forEach(Ljava/util/function/Consumer;)V"))
+    @Redirect(method = "upload", at = @At(value = "INVOKE", target = "Ljava/util/Set;forEach(Ljava/util/function/Consumer;)V"))
     private void redirectIteration(Set<Identifier> instance, Consumer<Identifier> consumer) {
         try (LoadingScreenManager.RenderLoop.ProgressHolder progressHolder = LoadingScreenManager.tryCreateProgressHolder()) {
             int index = 0;
