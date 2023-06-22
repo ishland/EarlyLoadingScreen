@@ -4,6 +4,7 @@
   "compatibilityLevel": "JAVA_17",
   "plugin": "com.ishland.earlyloadingscreen.TheMixinConfig",
   "mixins": [
+    "MixinAtlasLoader",
     "MixinWindow",
     "access.ISimpleResourceReload"
   ],
@@ -11,9 +12,13 @@
     "defaultRequire": 1
   },
   "client": [
+    "MixinBakedModelManager",
     "MixinMinecraftClient",
     "MixinModelLoader",
     "MixinSplashOverlay",
-    "MixinTextureManager"
+    "MixinSpriteLoader",
+    "MixinTextureManager",
+    "MixinTextureStitcher",
+    "access.ITextureStitcherHolder"
   ]
 }

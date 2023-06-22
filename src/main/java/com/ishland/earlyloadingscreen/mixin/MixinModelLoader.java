@@ -30,8 +30,7 @@ public abstract class MixinModelLoader {
 
     @Inject(method = "<init>", at = @At(value = "INVOKE", target = "Ljava/lang/Object;<init>()V", shift = At.Shift.AFTER))
     private void earlyInit(CallbackInfo ci) {
-        final LoadingScreenManager.RenderLoop renderLoop = LoadingScreenManager.windowEventLoop.renderLoop;
-        modelLoadProgressHolder = renderLoop != null ? renderLoop.new ProgressHolder() : null;
+        modelLoadProgressHolder = LoadingScreenManager.tryCreateProgressHolder();
         deferredLoad = new ArrayList<>();
         if (modelLoadProgressHolder != null) {
             modelLoadProgressHolder.update("Preparing models...");
@@ -78,8 +77,7 @@ public abstract class MixinModelLoader {
 
     @Redirect(method = "bake", at = @At(value = "INVOKE", target = "Ljava/util/Set;forEach(Ljava/util/function/Consumer;)V"))
     private void redirectIteration(Set<Identifier> instance, Consumer<Identifier> consumer) {
-        final LoadingScreenManager.RenderLoop renderLoop = LoadingScreenManager.windowEventLoop.renderLoop;
-        try (LoadingScreenManager.RenderLoop.ProgressHolder progressHolder = renderLoop != null ? renderLoop.new ProgressHolder() : null) {
+        try (LoadingScreenManager.RenderLoop.ProgressHolder progressHolder = LoadingScreenManager.tryCreateProgressHolder()) {
             int index = 0;
             int size = instance.size();
             StringBuilder sb = new StringBuilder();

@@ -28,9 +28,9 @@ public class MixinSplashOverlay {
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(CallbackInfo ci) {
         if (this.reload instanceof SimpleResourceReload<?>) {
-            final LoadingScreenManager.RenderLoop renderLoop = LoadingScreenManager.windowEventLoop.renderLoop;
-            if (renderLoop != null) {
-                LoadingScreenManager.RenderLoop.ProgressHolder progressHolder = this.progressHolder = renderLoop.new ProgressHolder();
+            LoadingScreenManager.RenderLoop.ProgressHolder progressHolder = LoadingScreenManager.tryCreateProgressHolder();
+            if (progressHolder != null) {
+                this.progressHolder = progressHolder;
                 this.reload.whenComplete().thenRun(progressHolder::close);
             }
         }

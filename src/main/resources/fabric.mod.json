@@ -22,6 +22,7 @@
 			"com.ishland.earlyloadingscreen.PreLaunchHandler"
 		]
 	},
+	"accessWidener": "early-loading-screen.accesswidener",
 	"mixins": [
 		"early-loading-screen.mixins.json"
 	],

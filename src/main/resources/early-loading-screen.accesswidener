@@ -1,0 +1,5 @@
+accessWidener v1 named
+
+accessible    class    net/minecraft/client/texture/TextureStitcher$Holder
+
+extendable    class    net/minecraft/client/texture/TextureStitcher$Holder

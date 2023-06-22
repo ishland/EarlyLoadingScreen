@@ -118,6 +118,7 @@ public class LoadingScreenManager {
         final long handle = GLFW.glfwCreateWindow(854, 480, "Minecraft - initializing mods...", 0L, 0L);
         // Center window
         final long monitor = glfwGetPrimaryMonitor();
+        GL.getFunctionProvider(); // Load GL functions
         if (monitor != 0L) {
             final GLFWVidMode vidmode = glfwGetVideoMode(monitor);
             if (vidmode != null) {
@@ -130,6 +131,11 @@ public class LoadingScreenManager {
         }
 
         return handle;
+    }
+
+    public static RenderLoop.ProgressHolder tryCreateProgressHolder() {
+        final LoadingScreenManager.RenderLoop renderLoop = LoadingScreenManager.windowEventLoop.renderLoop;
+        return renderLoop != null ? renderLoop.new ProgressHolder() : null;
     }
 
     public static class RenderLoop {
