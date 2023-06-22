@@ -214,6 +214,12 @@ public class GLText {
     }
 
     public Closeable gltBeginDraw() {
+        final boolean isBlendEnabled = glIsEnabled(GL_BLEND);
+
+        if (!isBlendEnabled) {
+            glEnable(GL_BLEND);
+        }
+
         glUseProgram(_gltText2DShader);
 
         glActiveTexture(GL_TEXTURE0);
@@ -221,6 +227,9 @@ public class GLText {
         return () -> {
             glUseProgram(0);
             glBindTexture(GL_TEXTURE_2D, 0);
+            if (!isBlendEnabled) {
+                glDisable(GL_BLEND);
+            }
         };
     }
 
@@ -301,7 +310,7 @@ public class GLText {
 
         if (verticalAlignment == GLT_CENTER) {
             y -= gltGetTextHeight(text, scale) * 0.5f;
-        } else if (verticalAlignment == GLT_RIGHT) {
+        } else if (verticalAlignment == GLT_BOTTOM) {
             y -= gltGetTextHeight(text, scale);
         }
 
@@ -1004,7 +1013,7 @@ public class GLText {
     //"}\n";
     private static final String _gltText2DVertexShaderSource =
             """
-            #version 330 core
+            #version 150 core
 
             in vec2 position;
             in vec2 texCoord;
@@ -1038,7 +1047,7 @@ public class GLText {
     //"}\n";
     private static final String _gltText2DFragmentShaderSource =
             """
-            #version 330 core
+            #version 150 core
 
             out vec4 fragColor;
 

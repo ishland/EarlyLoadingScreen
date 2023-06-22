@@ -3,27 +3,26 @@ package com.ishland.earlyloadingscreen;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.ishland.earlyloadingscreen.render.GLText;
+import it.unimi.dsi.fastutil.objects.ReferenceLinkedOpenHashSet;
+import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
+import it.unimi.dsi.fastutil.objects.ReferenceSet;
+import it.unimi.dsi.fastutil.objects.ReferenceSets;
 import org.jetbrains.annotations.NotNull;
-import org.lwjgl.BufferUtils;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.glfw.Callbacks;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.opengl.GL;
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GLUtil;
-import org.lwjgl.stb.STBEasyFont;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
 import org.lwjgl.util.tinyfd.TinyFileDialogs;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.nio.ByteBuffer;
+import java.lang.ref.Cleaner;
 import java.util.List;
 import java.util.Locale;
-import java.util.Objects;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -35,6 +34,8 @@ import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL32.*;
 
 public class LoadingScreenManager {
+
+    public static final Cleaner CLEANER = Cleaner.create();
 
     private static long handle;
     public static final WindowEventLoop windowEventLoop;
@@ -136,6 +137,10 @@ public class LoadingScreenManager {
         public final GLText glt = new GLText();
         public final GLText.GLTtext memoryUsage = gltCreateText();
         public final GLText.GLTtext fpsText = gltCreateText();
+        private final GLText.GLTtext progressText = gltCreateText();
+
+        private final Object progressSync = new Object();
+        private final ReferenceSet<Progress> activeProgress = ReferenceSets.synchronize(new ReferenceLinkedOpenHashSet<>(), progressSync);
 
         public void render() {
             int[] height = new int[1];
@@ -144,7 +149,7 @@ public class LoadingScreenManager {
             glViewport(0, 0, width[0], height[0]);
             glt.gltViewport(width[0], height[0]);
 
-            try (final Closeable unused = glt.gltBeginDraw()) {
+            try (final Closeable ignored = glt.gltBeginDraw()) {
                 glt.gltColor(1.0f, 1.0f, 1.0f, 1.0f);
 
                 gltSetText(this.memoryUsage, "Memory: %d/%d MiB".formatted(
@@ -165,8 +170,54 @@ public class LoadingScreenManager {
                         1.0f,
                         GLT_LEFT, GLT_TOP
                 );
+
+                StringBuilder sb = new StringBuilder();
+                synchronized (progressSync) {
+                    for (Progress progress : activeProgress) {
+                        sb.append(progress.text).append('\n');
+                    }
+                }
+                gltSetText(this.progressText, sb.toString().trim());
+                glt.gltDrawText2DAligned(
+                        this.progressText,
+                        0,
+                        height[0],
+                        1.0f,
+                        GLT_LEFT, GLT_BOTTOM
+                );
+
             } catch (IOException e) {
                 throw new RuntimeException(e); // shouldn't happen
+            }
+        }
+
+        private static class Progress {
+            public volatile String text = "";
+
+            public void update(String text) {
+                this.text = text;
+            }
+
+        }
+
+        public class ProgressHolder implements Closeable {
+
+            private final Progress impl;
+
+            public ProgressHolder() {
+                final ReferenceSet<Progress> activeProgress1 = activeProgress;
+                Progress progress = this.impl = new Progress();
+                CLEANER.register(this, () -> activeProgress1.remove(progress));
+                activeProgress.add(impl);
+            }
+
+            public void update(String text) {
+                impl.update(text);
+            }
+
+            @Override
+            public void close() {
+                activeProgress.remove(impl);
             }
         }
 
