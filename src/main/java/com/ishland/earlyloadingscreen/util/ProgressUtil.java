@@ -17,7 +17,7 @@ public class ProgressUtil {
             for (CompletionStage<?> future : futures) {
                 future.whenComplete((v, throwable) -> {
                     final int i = counter.incrementAndGet();
-                    holder.update(String.format("Loading %s... (%d/%d)", name, i, total));
+                    holder.update(String.format("%s... (%d/%d)", name, i, total));
                 });
             }
             combined.whenComplete((vs, throwable) -> holder.close());
