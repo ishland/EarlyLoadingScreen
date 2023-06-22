@@ -180,6 +180,7 @@ public class LoadingScreenManager {
                 StringBuilder sb = new StringBuilder();
                 synchronized (progressSync) {
                     for (Progress progress : activeProgress) {
+                        if (progress.text.isBlank()) continue;
                         sb.append(progress.text).append('\n');
                     }
                 }

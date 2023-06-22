@@ -26,11 +26,13 @@ public abstract class MixinModelLoader {
     @Shadow protected abstract void addModel(ModelIdentifier modelId);
 
     private LoadingScreenManager.RenderLoop.ProgressHolder modelLoadProgressHolder;
+    private LoadingScreenManager.RenderLoop.ProgressHolder modelAdditionalLoadProgressHolder;
     private List<ModelIdentifier> deferredLoad;
 
     @Inject(method = "<init>", at = @At(value = "INVOKE", target = "Ljava/lang/Object;<init>()V", shift = At.Shift.AFTER))
     private void earlyInit(CallbackInfo ci) {
         modelLoadProgressHolder = LoadingScreenManager.tryCreateProgressHolder();
+        modelAdditionalLoadProgressHolder = LoadingScreenManager.tryCreateProgressHolder();
         deferredLoad = new ArrayList<>();
         if (modelLoadProgressHolder != null) {
             modelLoadProgressHolder.update("Preparing models...");
@@ -42,6 +44,10 @@ public abstract class MixinModelLoader {
         if (modelLoadProgressHolder != null) {
             modelLoadProgressHolder.close();
             modelLoadProgressHolder = null;
+        }
+        if (modelAdditionalLoadProgressHolder != null) {
+            modelAdditionalLoadProgressHolder.close();
+            modelAdditionalLoadProgressHolder = null;
         }
     }
 
@@ -92,6 +98,20 @@ public abstract class MixinModelLoader {
             }
         }
 
+    }
+
+    @Inject(method = "loadModel", at = @At("HEAD"))
+    private void captureAdditionalLoadModelsPre(Identifier id, CallbackInfo ci) {
+        if (deferredLoad == null && modelAdditionalLoadProgressHolder != null) {
+            modelAdditionalLoadProgressHolder.update("Loading additional model %s...".formatted(id));
+        }
+    }
+
+    @Inject(method = "loadModel", at = @At("RETURN"))
+    private void captureAdditionalLoadModelsPost(Identifier id, CallbackInfo ci) {
+        if (deferredLoad == null && modelAdditionalLoadProgressHolder != null) {
+            modelAdditionalLoadProgressHolder.update("Loaded additional model %s".formatted(id));
+        }
     }
 
 }
