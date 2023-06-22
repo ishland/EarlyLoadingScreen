@@ -481,8 +481,12 @@ public class GLText {
                 //			if (!gltIsCharacterSupported(c))
                 //				continue;
                 //#else
-                continue;
+//                continue;
                 //#endif
+                c = ' ';
+                if (!gltIsCharacterSupported(c)) {
+                    continue;
+                }
             }
 
             _GLTglyph glyph = _gltFontGlyphs2[c - _gltFontGlyphMinChar];
