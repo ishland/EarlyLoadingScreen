@@ -14,8 +14,6 @@ import java.util.Set;
 
 public class TheMod implements ModInitializer {
 
-    static final Logger LOGGER = LoggerFactory.getLogger("EarlyLoadingScreen");
-
     @Override
     public void onInitialize() {
         auditMixins();
