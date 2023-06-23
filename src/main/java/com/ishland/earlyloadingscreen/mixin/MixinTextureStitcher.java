@@ -24,7 +24,7 @@ public class MixinTextureStitcher<T extends TextureStitcher.Stitchable> {
     private void preStitch(CallbackInfo ci) {
         progressHolder = LoadingScreenManager.tryCreateProgressHolder();
         if (progressHolder != null) {
-            progressHolder.update("Stitiching textures...");
+            progressHolder.update(() -> "Stitiching textures...");
         }
     }
 
@@ -36,7 +36,7 @@ public class MixinTextureStitcher<T extends TextureStitcher.Stitchable> {
     @Inject(method = "stitch", at = @At(value = "INVOKE", target = "Ljava/util/Iterator;next()Ljava/lang/Object;", shift = At.Shift.BY, by = 3), locals = LocalCapture.CAPTURE_FAILSOFT)
     private void monitorStitch(CallbackInfo ci, List<TextureStitcher.Holder<T>> list, Iterator<TextureStitcher.Holder<T>> var2, TextureStitcher.Holder<T> holder) {
         if (progressHolder != null && var2 instanceof ListIterator<TextureStitcher.Holder<T>> iterator) {
-            progressHolder.update("Stitiching textures (%d/%d): %s".formatted(iterator.previousIndex(), list.size(), ((ITextureStitcherHolder<T>) holder).getSprite().getId()));
+            progressHolder.update(() -> "Stitiching textures (%d/%d): %s".formatted(iterator.previousIndex(), list.size(), ((ITextureStitcherHolder<T>) holder).getSprite().getId()));
         }
     }
 

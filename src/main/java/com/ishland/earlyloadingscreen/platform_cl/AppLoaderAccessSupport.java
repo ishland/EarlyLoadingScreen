@@ -6,6 +6,7 @@ import net.fabricmc.loader.api.entrypoint.EntrypointContainer;
 import java.io.Closeable;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.function.Supplier;
 
 public class AppLoaderAccessSupport {
 
@@ -34,7 +35,7 @@ public class AppLoaderAccessSupport {
     @SuppressWarnings("unused")
     public static <T> void onEntrypointInvoke(EntrypointContainer<T> container, ProgressHolderAccessor progressHolder, List<?> list, ListIterator<?> listIterator, String entrypointName) {
         if (progressHolder != null) {
-            progressHolder.update(String.format("Running entrypoint %s (%d/%d) for mod %s", entrypointName, listIterator.previousIndex(), list.size(), container.getProvider().getMetadata().getId()));
+            progressHolder.update(() -> String.format("Running entrypoint %s (%d/%d) for mod %s", entrypointName, listIterator.previousIndex(), list.size(), container.getProvider().getMetadata().getId()));
         }
     }
 
@@ -43,7 +44,7 @@ public class AppLoaderAccessSupport {
     }
 
     public interface ProgressHolderAccessor extends Closeable {
-        public void update(String text);
+        public void update(Supplier<String> text);
     }
 
 }

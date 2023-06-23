@@ -43,7 +43,7 @@ public class MixinSplashOverlay {
         final LoadingScreenManager.RenderLoop renderLoop = LoadingScreenManager.windowEventLoop.renderLoop;
         if (renderLoop != null) {
             if (this.progressHolder != null && this.reload instanceof SimpleResourceReload<?> simpleResourceReload) {
-                this.progressHolder.update("Pending reloads: " + Arrays.toString(((ISimpleResourceReload) simpleResourceReload).getWaitingReloaders().toArray()));
+                this.progressHolder.update(() -> "Pending reloads: " + Arrays.toString(((ISimpleResourceReload) simpleResourceReload).getWaitingReloaders().toArray()));
             }
             final MinecraftClient client = MinecraftClient.getInstance();
             if (client != null) {

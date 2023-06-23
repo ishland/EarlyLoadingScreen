@@ -2,8 +2,8 @@ package com.ishland.earlyloadingscreen;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
-import com.ishland.earlyloadingscreen.render.GLText;
 import com.ishland.earlyloadingscreen.platform_cl.AppLoaderAccessSupport;
+import com.ishland.earlyloadingscreen.render.GLText;
 import it.unimi.dsi.fastutil.objects.ReferenceLinkedOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ReferenceSet;
 import it.unimi.dsi.fastutil.objects.ReferenceSets;
@@ -27,11 +27,24 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.LockSupport;
+import java.util.function.Supplier;
 
 import static com.ishland.earlyloadingscreen.SharedConstants.LOGGER;
-import static com.ishland.earlyloadingscreen.render.GLText.*;
-import static org.lwjgl.glfw.GLFW.*;
-import static org.lwjgl.opengl.GL32.*;
+import static com.ishland.earlyloadingscreen.render.GLText.GLT_BOTTOM;
+import static com.ishland.earlyloadingscreen.render.GLText.GLT_LEFT;
+import static com.ishland.earlyloadingscreen.render.GLText.GLT_RIGHT;
+import static com.ishland.earlyloadingscreen.render.GLText.GLT_TOP;
+import static com.ishland.earlyloadingscreen.render.GLText.gltCreateText;
+import static com.ishland.earlyloadingscreen.render.GLText.gltSetText;
+import static org.lwjgl.glfw.GLFW.glfwGetCurrentContext;
+import static org.lwjgl.glfw.GLFW.glfwGetFramebufferSize;
+import static org.lwjgl.glfw.GLFW.glfwGetPrimaryMonitor;
+import static org.lwjgl.glfw.GLFW.glfwGetVideoMode;
+import static org.lwjgl.glfw.GLFW.glfwSetWindowPos;
+import static org.lwjgl.opengl.GL32.GL_COLOR_BUFFER_BIT;
+import static org.lwjgl.opengl.GL32.GL_DEPTH_BUFFER_BIT;
+import static org.lwjgl.opengl.GL32.glClear;
+import static org.lwjgl.opengl.GL32.glClearColor;
 
 public class LoadingScreenManager {
 
@@ -156,7 +169,7 @@ public class LoadingScreenManager {
 
     public static RenderLoop.ProgressHolder tryCreateProgressHolder() {
         synchronized (windowEventLoopSync) {
-            final LoadingScreenManager.RenderLoop renderLoop = LoadingScreenManager.windowEventLoop.renderLoop;
+            final RenderLoop renderLoop = LoadingScreenManager.windowEventLoop.renderLoop;
             return renderLoop != null ? renderLoop.new ProgressHolder() : null;
         }
     }
@@ -201,8 +214,9 @@ public class LoadingScreenManager {
                 StringBuilder sb = new StringBuilder();
                 synchronized (progressSync) {
                     for (Progress progress : activeProgress) {
-                        if (progress.text.isBlank()) continue;
-                        sb.append(progress.text).append('\n');
+                        final String str = progress.get();
+                        if (str.isBlank()) continue;
+                        sb.append(str).append('\n');
                     }
                 }
                 gltSetText(this.progressText, sb.toString().trim());
@@ -224,10 +238,32 @@ public class LoadingScreenManager {
         }
 
         private static class Progress {
-            public volatile String text = "";
+            private volatile Supplier<String> supplier;
+            private int lastSupplierHash = 0;
+            private String text = "";
 
-            public void update(String text) {
-                this.text = text;
+            public void update(Supplier<String> text) {
+                this.supplier = text;
+            }
+
+            public String get() {
+                final Supplier<String> supplier = this.supplier;
+                if (supplier == null) return "null";
+                final int hash = supplier.hashCode();
+                if (hash != lastSupplierHash) {
+                    lastSupplierHash = hash;
+                    text = get0();
+                }
+                return text;
+            }
+
+            private String get0() {
+                try {
+                    final String s = supplier.get();
+                    return s;
+                } catch (Throwable t) {
+                    return "Error: " + t.getMessage();
+                }
             }
 
         }
@@ -243,7 +279,7 @@ public class LoadingScreenManager {
                 activeProgress.add(impl);
             }
 
-            public void update(String text) {
+            public void update(Supplier<String> text) {
                 impl.update(text);
             }
 

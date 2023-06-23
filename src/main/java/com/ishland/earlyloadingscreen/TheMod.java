@@ -46,7 +46,8 @@ public class TheMod implements ModInitializer {
                     int total = unhandled.size();
                     for (String s : unhandled) {
                         if (progressHolder != null) {
-                            progressHolder.update(String.format("Loading class (%d/%d): %s ", index, total, s));
+                            int finalIndex = index;
+                            progressHolder.update(() -> String.format("Loading class (%d/%d): %s ", finalIndex, total, s));
                         }
                         MixinService.getService().getClassProvider().findClass(s, false);
                         index ++;
