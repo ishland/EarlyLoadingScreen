@@ -42,7 +42,7 @@ public abstract class MixinModelLoader {
         modelAdditionalLoadProgressHolder = LoadingScreenManager.tryCreateProgressHolder();
         deferredLoad = new ArrayList<>();
         if (modelLoadProgressHolder != null) {
-            modelLoadProgressHolder.update("Preparing models...");
+            modelLoadProgressHolder.update(() -> "Preparing models...");
         }
     }
 
@@ -71,22 +71,20 @@ public abstract class MixinModelLoader {
 
     @Inject(method = "<init>", at = @At(value = "FIELD", target = "Lnet/minecraft/client/render/model/ModelLoader;modelsToBake:Ljava/util/Map;", opcode = Opcodes.GETFIELD))
     private void runDeferredLoad(CallbackInfo ci) {
-        StringBuilder sb = new StringBuilder();
         if (deferredLoad != null) {
             int index = 0;
             int size = deferredLoad.size();
             for (ModelIdentifier modelId : deferredLoad) {
                 if (modelLoadProgressHolder != null) {
-                    sb.setLength(0);
-                    sb.append("Loading model").append(" (").append(index).append("/").append(size).append("): ").append(modelId);
-                    modelLoadProgressHolder.update(sb.toString());
+                    int finalIndex = index;
+                    modelLoadProgressHolder.update(() -> String.format("Loading model (%d/%d): %s", finalIndex, size, modelId));
                 }
                 index ++;
                 this.addModel(modelId);
             }
             deferredLoad = null;
             if (modelLoadProgressHolder != null) {
-                modelLoadProgressHolder.update("Resolving models...");
+                modelLoadProgressHolder.update(() -> "Resolving models...");
             }
         }
     }
@@ -96,12 +94,10 @@ public abstract class MixinModelLoader {
         try (LoadingScreenManager.RenderLoop.ProgressHolder progressHolder = LoadingScreenManager.tryCreateProgressHolder()) {
             int index = 0;
             int size = instance.size();
-            StringBuilder sb = new StringBuilder();
             for (Identifier identifier : instance) {
                 if (progressHolder != null) {
-                    sb.setLength(0);
-                    sb.append("Baking model").append(" (").append(index).append("/").append(size).append("): ").append(identifier);
-                    progressHolder.update(sb.toString());
+                    int finalIndex = index;
+                    progressHolder.update(() -> String.format("Baking model (%d/%d): %s", finalIndex, size, identifier));
                 }
                 index++;
                 consumer.accept(identifier);
@@ -112,28 +108,28 @@ public abstract class MixinModelLoader {
     @Inject(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/texture/SpriteAtlasTexture;stitch(Lnet/minecraft/resource/ResourceManager;Ljava/util/stream/Stream;Lnet/minecraft/util/profiler/Profiler;I)Lnet/minecraft/client/texture/SpriteAtlasTexture$Data;"), locals = LocalCapture.CAPTURE_FAILSOFT)
     private void captureStitching(ResourceManager resourceManager, BlockColors blockColors, Profiler profiler, int mipmapLevel, CallbackInfo ci, Set<Pair<String, String>> set, Set<SpriteIdentifier> set2, Map<Identifier, List<SpriteIdentifier>> map, Iterator<Map.Entry<Identifier, List<SpriteIdentifier>>> var8, Map.Entry<Identifier, List<SpriteIdentifier>> entry, SpriteAtlasTexture spriteAtlasTexture) {
         if (modelLoadProgressHolder != null) {
-            modelLoadProgressHolder.update("Stitching texture %s...".formatted(entry.getKey()));
+            modelLoadProgressHolder.update(() -> "Stitching texture %s...".formatted(entry.getKey()));
         }
     }
 
     @Inject(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/profiler/Profiler;pop()V", ordinal = 0), slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/client/texture/SpriteAtlasTexture;stitch(Lnet/minecraft/resource/ResourceManager;Ljava/util/stream/Stream;Lnet/minecraft/util/profiler/Profiler;I)Lnet/minecraft/client/texture/SpriteAtlasTexture$Data;")))
     private void capturePostStitching(CallbackInfo ci) {
         if (modelLoadProgressHolder != null) {
-            modelLoadProgressHolder.update("Finalizing model load...");
+            modelLoadProgressHolder.update(() -> "Finalizing model load...");
         }
     }
 
     @Inject(method = "loadModel", at = @At("HEAD"))
     private void captureAdditionalLoadModelsPre(Identifier id, CallbackInfo ci) {
         if (deferredLoad == null && modelAdditionalLoadProgressHolder != null) {
-            modelAdditionalLoadProgressHolder.update("Loading additional model %s...".formatted(id));
+            modelAdditionalLoadProgressHolder.update(() -> "Loading additional model %s...".formatted(id));
         }
     }
 
     @Inject(method = "loadModel", at = @At("RETURN"))
     private void captureAdditionalLoadModelsPost(Identifier id, CallbackInfo ci) {
         if (deferredLoad == null && modelAdditionalLoadProgressHolder != null) {
-            modelAdditionalLoadProgressHolder.update("Loaded additional model %s".formatted(id));
+            modelAdditionalLoadProgressHolder.update(() -> "Loaded additional model %s".formatted(id));
         }
     }
 
