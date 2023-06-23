@@ -1,6 +1,6 @@
 package com.ishland.earlyloadingscreen.mixin;
 
-import com.ishland.earlyloadingscreen.Config;
+import com.ishland.earlyloadingscreen.platform_cl.Config;
 import com.ishland.earlyloadingscreen.LoadingScreenManager;
 import com.ishland.earlyloadingscreen.SharedConstants;
 import net.minecraft.client.util.Window;

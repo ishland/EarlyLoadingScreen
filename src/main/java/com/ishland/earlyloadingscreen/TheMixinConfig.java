@@ -16,11 +16,7 @@ public class TheMixinConfig implements IMixinConfigPlugin {
     @Override
     public void onLoad(String mixinPackage) {
         MixinExtrasBootstrap.init();
-        Config.init();
-        if (Config.ENABLE_ENTRYPOINT_INFORMATION) {
-            FabricLoaderInvokePatch.init();
-        }
-        LoadingScreenManager.init();
+        Launch.init();
     }
 
     @Override

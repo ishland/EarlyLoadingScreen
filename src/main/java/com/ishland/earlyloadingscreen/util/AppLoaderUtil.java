@@ -17,17 +17,20 @@ public class AppLoaderUtil {
 //            lookup.defineClass(getClassFile("com.ishland.earlyloadingscreen.platform_cl.AppLoaderAccessSupport$LoadingScreenAccessor"));
 //            lookup.defineClass(getClassFile("com.ishland.earlyloadingscreen.platform_cl.AppLoaderAccessSupport$ProgressHolderAccessor"));
 
-            final Method defineClass = ClassLoader.class.getDeclaredMethod("defineClass", String.class, byte[].class, int.class, int.class);
-            defineClass.setAccessible(true);
-            defineClass(defineClass, "com.ishland.earlyloadingscreen.platform_cl.AppLoaderAccessSupport");
-            defineClass(defineClass, "com.ishland.earlyloadingscreen.platform_cl.AppLoaderAccessSupport$LoadingScreenAccessor");
-            defineClass(defineClass, "com.ishland.earlyloadingscreen.platform_cl.AppLoaderAccessSupport$ProgressHolderAccessor");
+            defineClass("com.ishland.earlyloadingscreen.platform_cl.AppLoaderAccessSupport");
+            defineClass("com.ishland.earlyloadingscreen.platform_cl.AppLoaderAccessSupport$LoadingScreenAccessor");
+            defineClass("com.ishland.earlyloadingscreen.platform_cl.AppLoaderAccessSupport$ProgressHolderAccessor");
         } catch (Throwable t) {
             throw new RuntimeException("Failed to init AppLoaderUtil", t);
         }
     }
 
-    private static void defineClass(Method defineClass, String name) throws IllegalAccessException, InvocationTargetException, IOException {
+    private static void defineClass(String name) throws IllegalAccessException, InvocationTargetException, IOException, NoSuchMethodException {
+        if (isAlreadyLoaded(name)) {
+            return;
+        }
+        final Method defineClass = ClassLoader.class.getDeclaredMethod("defineClass", String.class, byte[].class, int.class, int.class);
+        defineClass.setAccessible(true);
         defineClass.invoke(
                 FabricLoader.class.getClassLoader(),
                 name,
@@ -35,6 +38,15 @@ public class AppLoaderUtil {
                 0,
                 getClassFile(name).length
         );
+    }
+
+    private static boolean isAlreadyLoaded(String name) {
+        try {
+            Class.forName(name, false, FabricLoader.class.getClassLoader());
+            return true;
+        } catch (ClassNotFoundException e) {
+            return false;
+        }
     }
 
     private static byte[] getClassFile(String name) throws IOException {

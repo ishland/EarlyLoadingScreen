@@ -1,5 +1,6 @@
 package com.ishland.earlyloadingscreen;
 
+import com.ishland.earlyloadingscreen.platform_cl.Config;
 import net.fabricmc.api.ModInitializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

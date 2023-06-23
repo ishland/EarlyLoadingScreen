@@ -3,10 +3,8 @@ package com.ishland.earlyloadingscreen;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.ishland.earlyloadingscreen.platform_cl.AppLoaderAccessSupport;
+import com.ishland.earlyloadingscreen.platform_cl.Config;
 import com.ishland.earlyloadingscreen.render.GLText;
-import it.unimi.dsi.fastutil.objects.ReferenceLinkedOpenHashSet;
-import it.unimi.dsi.fastutil.objects.ReferenceSet;
-import it.unimi.dsi.fastutil.objects.ReferenceSets;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.glfw.Callbacks;
@@ -21,8 +19,11 @@ import org.lwjgl.util.tinyfd.TinyFileDialogs;
 import java.io.Closeable;
 import java.io.IOException;
 import java.lang.ref.Cleaner;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -168,6 +169,11 @@ public class LoadingScreenManager {
     }
 
     public static RenderLoop.ProgressHolder tryCreateProgressHolder() {
+        if (!LoadingScreenManager.windowEventLoop.initialized) {
+            while (!LoadingScreenManager.windowEventLoop.initialized && LoadingScreenManager.windowEventLoop.isAlive()) {
+                // spin wait, should come very soon
+            }
+        }
         synchronized (windowEventLoopSync) {
             final RenderLoop renderLoop = LoadingScreenManager.windowEventLoop.renderLoop;
             return renderLoop != null ? renderLoop.new ProgressHolder() : null;
@@ -182,7 +188,7 @@ public class LoadingScreenManager {
         private final GLText.GLTtext progressText = gltCreateText();
 
         private final Object progressSync = new Object();
-        private final ReferenceSet<Progress> activeProgress = ReferenceSets.synchronize(new ReferenceLinkedOpenHashSet<>(), progressSync);
+        private final Set<Progress> activeProgress = new LinkedHashSet<>();
 
         public void render(int width, int height) {
 //            glfwGetFramebufferSize(glfwGetCurrentContext(), width, height);
@@ -272,10 +278,17 @@ public class LoadingScreenManager {
             private final Progress impl;
 
             public ProgressHolder() {
-                final ReferenceSet<Progress> activeProgress1 = activeProgress;
+                final Set<Progress> activeProgress1 = activeProgress;
+                final Object progressSync1 = progressSync;
                 Progress progress = this.impl = new Progress();
-                CLEANER.register(this, () -> activeProgress1.remove(progress));
-                activeProgress.add(impl);
+                CLEANER.register(this, () -> {
+                    synchronized (progressSync1) {
+                        activeProgress1.remove(progress);
+                    }
+                });
+                synchronized (progressSync) {
+                    activeProgress.add(impl);
+                }
             }
 
             public void update(Supplier<String> text) {
@@ -284,7 +297,9 @@ public class LoadingScreenManager {
 
             @Override
             public void close() {
-                activeProgress.remove(impl);
+                synchronized (progressSync) {
+                    activeProgress.remove(impl);
+                }
             }
         }
 
@@ -296,6 +311,7 @@ public class LoadingScreenManager {
         private final AtomicBoolean running = new AtomicBoolean(true);
         private final ConcurrentLinkedQueue<Runnable> queue = new ConcurrentLinkedQueue<>();
 
+        private volatile boolean initialized = false;
         public volatile RenderLoop renderLoop = null;
 
         private WindowEventLoop(long handle) {
@@ -311,6 +327,8 @@ public class LoadingScreenManager {
                 GLFW.glfwSwapInterval(1);
 
                 RenderLoop renderLoop = this.renderLoop = new RenderLoop();
+
+                initialized = true;
 
                 long lastFpsTime = System.nanoTime();
                 int fpsCounter = 0;
@@ -361,6 +379,7 @@ public class LoadingScreenManager {
             } finally {
                 Callbacks.glfwFreeCallbacks(this.handle);
                 GLFW.glfwMakeContextCurrent(0L);
+                initialized = true;
             }
         }
 

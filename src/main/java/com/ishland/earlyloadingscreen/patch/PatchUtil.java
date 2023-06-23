@@ -14,6 +14,8 @@ import java.lang.instrument.Instrumentation;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.ProtectionDomain;
+import java.util.Comparator;
+import java.util.Iterator;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class PatchUtil {
@@ -26,7 +28,7 @@ public class PatchUtil {
     static {
         if (Files.isDirectory(transformerOutputPath)) {
             try {
-                PathUtils.deleteDirectory(transformerOutputPath);
+                deleteDirectory(transformerOutputPath);
             } catch (IOException e) {
                 SharedConstants.LOGGER.warn("Failed to delete transformer output directory", e);
             }
@@ -71,11 +73,20 @@ public class PatchUtil {
                             return null;
                         }
                     } catch (Throwable t) {
+                        t.printStackTrace();
                         SharedConstants.LOGGER.warn("Failed to transform class " + className, t);
                         return null;
                     }
                 }
             }, true);
+        }
+    }
+
+    private static void deleteDirectory(Path path) throws IOException {
+        final Iterator<Path> iterator = Files.walk(path)
+                .sorted(Comparator.reverseOrder()).iterator();
+        while (iterator.hasNext()) {
+            Files.delete(iterator.next());
         }
     }
 
