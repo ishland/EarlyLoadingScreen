@@ -190,6 +190,11 @@ public class LoadingScreenManager {
         private final Object progressSync = new Object();
         private final Set<Progress> activeProgress = new LinkedHashSet<>();
 
+        static {
+            ProgressHolder.class.getName(); // load class
+            Progress.class.getName(); // load class
+        }
+
         public void render(int width, int height) {
 //            glfwGetFramebufferSize(glfwGetCurrentContext(), width, height);
 //            glViewport(0, 0, width[0], height[0]);
