@@ -140,6 +140,7 @@ public class GLText {
         glEnableVertexAttribArray(_GLT_TEXT2D_TEXCOORD_LOCATION);
         glVertexAttribPointer(_GLT_TEXT2D_TEXCOORD_LOCATION, _GLT_TEXT2D_TEXCOORD_SIZE, GL_FLOAT, false, (_GLT_TEXT2D_VERTEX_SIZE * Float.BYTES), (_GLT_TEXT2D_TEXCOORD_OFFSET * Float.BYTES));
 
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
         glBindVertexArray(0);
 
         return text;
@@ -280,6 +281,7 @@ public class GLText {
 
         glBindVertexArray(text._vao);
         glDrawArrays(GL_TRIANGLES, 0, text.vertexCount);
+        glBindVertexArray(0);
     }
 
     // #define _gltDrawText() \
@@ -317,6 +319,7 @@ public class GLText {
 
         glBindVertexArray(text._vao);
         glDrawArrays(GL_TRIANGLES, 0, text.vertexCount);
+        glBindVertexArray(0);
     }
 
     public void gltDrawText2DAligned(GLTtext text, float x, float y, float scale, int horizontalAlignment, int verticalAlignment) {
@@ -402,6 +405,7 @@ public class GLText {
 
         glBindVertexArray(text._vao);
         glDrawArrays(GL_TRIANGLES, 0, text.vertexCount);
+        glBindVertexArray(0);
     }
 
     // GLT_API void gltColor(GLfloat r, GLfloat g, GLfloat b, GLfloat a)
@@ -975,6 +979,7 @@ public class GLText {
 
         glBindBuffer(GL_ARRAY_BUFFER, text._vbo);
         glBufferData(GL_ARRAY_BUFFER, vertices, GL_DYNAMIC_DRAW);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
 
         text._dirty = false;
     }
@@ -1495,6 +1500,8 @@ public class GLText {
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+        glBindTexture(GL_TEXTURE_2D, 0);
 
     }
 

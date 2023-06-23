@@ -171,12 +171,10 @@ public class LoadingScreenManager {
         private final Object progressSync = new Object();
         private final ReferenceSet<Progress> activeProgress = ReferenceSets.synchronize(new ReferenceLinkedOpenHashSet<>(), progressSync);
 
-        public void render() {
-            int[] height = new int[1];
-            int[] width = new int[1];
-            glfwGetFramebufferSize(glfwGetCurrentContext(), width, height);
-            glViewport(0, 0, width[0], height[0]);
-            glt.gltViewport(width[0], height[0]);
+        public void render(int width, int height) {
+//            glfwGetFramebufferSize(glfwGetCurrentContext(), width, height);
+//            glViewport(0, 0, width[0], height[0]);
+            glt.gltViewport(width, height);
 
             try (final Closeable ignored = glt.gltBeginDraw()) {
                 glt.gltColor(1.0f, 1.0f, 1.0f, 1.0f);
@@ -187,7 +185,7 @@ public class LoadingScreenManager {
                 ));
                 glt.gltDrawText2DAligned(
                         this.memoryUsage,
-                        width[0],
+                        width,
                         0,
                         1.0f,
                         GLT_RIGHT, GLT_TOP
@@ -211,7 +209,7 @@ public class LoadingScreenManager {
                 glt.gltDrawText2DAligned(
                         this.progressText,
                         0,
-                        height[0],
+                        height,
                         1.0f,
                         GLT_LEFT, GLT_BOTTOM
                 );
@@ -302,7 +300,10 @@ public class LoadingScreenManager {
                     }
                     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-                    renderLoop.render();
+                    int[] width = new int[1];
+                    int[] height = new int[1];
+                    glfwGetFramebufferSize(glfwGetCurrentContext(), width, height);
+                    renderLoop.render(width[0], height[0]);
 
                     GLFW.glfwPollEvents();
                     GLFW.glfwSwapBuffers(this.handle);
@@ -314,8 +315,8 @@ public class LoadingScreenManager {
                         lastFpsTime = currentTime;
                         gltSetText(renderLoop.fpsText, "%d fps".formatted(fps));
                     }
-                    while ((System.nanoTime() - lastFrameTime) < 1_000_000_000L / 60L) {
-                        LockSupport.parkNanos(1_000_000L);
+                    while ((System.nanoTime() - lastFrameTime) + 100_000L < 1_000_000_000L / 60L) {
+                        LockSupport.parkNanos(100_000L);
                     }
                     lastFrameTime = System.nanoTime();
                 }
