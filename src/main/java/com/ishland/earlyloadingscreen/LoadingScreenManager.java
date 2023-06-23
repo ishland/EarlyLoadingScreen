@@ -3,8 +3,8 @@ package com.ishland.earlyloadingscreen;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.ishland.earlyloadingscreen.render.GLText;
+import com.ishland.earlyloadingscreen.platform_cl.AppLoaderAccessSupport;
 import it.unimi.dsi.fastutil.objects.ReferenceLinkedOpenHashSet;
-import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ReferenceSet;
 import it.unimi.dsi.fastutil.objects.ReferenceSets;
 import org.jetbrains.annotations.NotNull;
@@ -28,7 +28,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.LockSupport;
 
-import static com.ishland.earlyloadingscreen.TheMod.LOGGER;
+import static com.ishland.earlyloadingscreen.SharedConstants.LOGGER;
 import static com.ishland.earlyloadingscreen.render.GLText.*;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL32.*;
@@ -46,6 +46,7 @@ public class LoadingScreenManager {
         handle = initWindow();
         windowEventLoop = new WindowEventLoop(handle);
         windowEventLoop.start();
+        AppLoaderAccessSupport.setAccess(LoadingScreenManager::tryCreateProgressHolder);
     }
 
     public static void init() {
@@ -207,7 +208,7 @@ public class LoadingScreenManager {
 
         }
 
-        public class ProgressHolder implements Closeable {
+        public class ProgressHolder implements AppLoaderAccessSupport.ProgressHolderAccessor {
 
             private final Progress impl;
 

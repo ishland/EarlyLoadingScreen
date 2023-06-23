@@ -2,6 +2,7 @@ plugins {
 	id 'fabric-loom' version '1.2-SNAPSHOT'
 	id 'maven-publish'
 	id 'io.github.juuxel.loom-quiltflower' version '1.+'
+	id 'com.github.johnrengelman.shadow' version '7.1.0'
 }
 
 version = project.mod_version
@@ -13,6 +14,10 @@ base {
 
 loom {
 	accessWidenerPath = file("src/main/resources/early-loading-screen.accesswidener")
+}
+
+configurations {
+	shadowInclude
 }
 
 repositories {
@@ -39,6 +44,7 @@ dependencies {
 
 	// modImplementation "net.fabricmc.fabric-api:fabric-api-deprecated:${project.fabric_version}"
 
+	shadowInclude implementation('net.bytebuddy:byte-buddy-agent:1.14.0')
 	include implementation("com.github.LlamaLad7:MixinExtras:${project.mixinextras_version}")
 	annotationProcessor "com.github.LlamaLad7:MixinExtras:${project.mixinextras_version}"
 }
@@ -76,6 +82,24 @@ jar {
 		rename { "${it}_${project.archivesBaseName}"}
 	}
 }
+
+shadowJar {
+	archiveClassifier = "all-dev"
+	configurations = [ project.configurations.shadowInclude ]
+	from("LICENSE") {
+		rename { "${it}_${project.archivesBaseName}"}
+	}
+	relocate "net.bytebuddy", "com.ishland.earlyloadingscreen.deps.bytebuddy"
+}
+
+//noinspection UnnecessaryQualifiedReference
+task("remapShadowJar", type: net.fabricmc.loom.task.RemapJarTask, dependsOn: shadowJar) {
+	input = shadowJar.archiveFile
+	archiveFileName = shadowJar.archiveFileName.get().replaceAll("-dev\\.jar\$", ".jar")
+	addNestedDependencies = true
+}
+
+assemble.dependsOn(remapShadowJar)
 
 // configure the maven publication
 publishing {
