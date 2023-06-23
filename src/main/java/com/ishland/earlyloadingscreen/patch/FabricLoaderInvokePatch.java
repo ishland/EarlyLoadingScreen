@@ -47,14 +47,34 @@ public class FabricLoaderInvokePatch implements BytecodeTransformer {
             SharedConstants.LOGGER.warn("Instrumentation unavailable, entrypoint information will not be available");
             return;
         }
-        updateAppLoaderAccess(inst);
-        AppLoaderUtil.init();
+        try {
+            updateAppLoaderAccess(inst);
+        } catch (Throwable t) {
+            SharedConstants.LOGGER.warn("Failed to update AppLoader access", t);
+        }
+        try {
+            AppLoaderUtil.init();
+        } catch (Throwable t) {
+            SharedConstants.LOGGER.warn("Failed to define classes on AppClassLoader, entrypoint information will not be available", t);
+            return;
+        }
         PatchUtil.transformers.add(INSTANCE);
         try {
             inst.retransformClasses(Class.forName("net.fabricmc.loader.impl.launch.knot.KnotClassDelegate"));
             inst.retransformClasses(EntrypointUtils.class);
         } catch (Throwable t) {
-            SharedConstants.LOGGER.warn("Failed to retransform EntrypointUtils", t);
+            SharedConstants.LOGGER.warn("Failed to retransform EntrypointUtils, attempting to revert changes", t);
+            PatchUtil.transformers.remove(INSTANCE);
+            try {
+                inst.retransformClasses(Class.forName("net.fabricmc.loader.impl.launch.knot.KnotClassDelegate"));
+            } catch (Throwable t2) {
+                SharedConstants.LOGGER.warn("Failed to revert changes to EntrypointUtils", t2);
+            }
+            try {
+                inst.retransformClasses(EntrypointUtils.class);
+            } catch (Throwable t2) {
+                SharedConstants.LOGGER.warn("Failed to revert changes to EntrypointUtils", t2);
+            }
         }
     }
 

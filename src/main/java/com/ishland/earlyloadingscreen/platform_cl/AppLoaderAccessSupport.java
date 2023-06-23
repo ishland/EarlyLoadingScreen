@@ -11,7 +11,7 @@ public class AppLoaderAccessSupport {
 
     static {
         if (AppLoaderAccessSupport.class.getClassLoader() != FabricLoader.class.getClassLoader()) {
-            throw new RuntimeException("AppLoaderAccessSupport must be loaded by FabricLoader classloader");
+            System.err.println(String.format("[EarlyLoadingScreen] AppLoaderAccessSupport is loaded by %s but expected to be loaded by %s! Entrypoint information may not be available. ", AppLoaderAccessSupport.class.getClassLoader(), FabricLoader.class.getClassLoader()));
         }
         LoadingScreenAccessor.class.getName();
         ProgressHolderAccessor.class.getName();
@@ -34,7 +34,7 @@ public class AppLoaderAccessSupport {
     @SuppressWarnings("unused")
     public static <T> void onEntrypointInvoke(EntrypointContainer<T> container, ProgressHolderAccessor progressHolder, List<?> list, ListIterator<?> listIterator, String entrypointName) {
         if (progressHolder != null) {
-            progressHolder.update(String.format("Running entrypoint %s (%d/%d): for mod %s", entrypointName, listIterator.previousIndex(), list.size(), container.getProvider().getMetadata().getId()));
+            progressHolder.update(String.format("Running entrypoint %s (%d/%d) for mod %s", entrypointName, listIterator.previousIndex(), list.size(), container.getProvider().getMetadata().getId()));
         }
     }
 

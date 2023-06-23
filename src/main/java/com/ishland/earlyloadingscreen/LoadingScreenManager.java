@@ -39,6 +39,7 @@ public class LoadingScreenManager {
 
     private static long handle;
     public static final WindowEventLoop windowEventLoop;
+    private static final Object windowEventLoopSync = new Object();
 
     static {
         LOGGER.info("Creating early window...");
@@ -53,18 +54,38 @@ public class LoadingScreenManager {
         // intentionally empty
     }
 
-    public static synchronized long takeContext() {
-        if (handle == 0L) {
-            return 0L;
+    public static long takeContext() {
+        synchronized (windowEventLoopSync) {
+            if (handle == 0L) {
+                return 0L;
+            }
+            LOGGER.info("Handing early window to Minecraft...");
+            windowEventLoop.running.set(false);
+            while (windowEventLoop.isAlive()) {
+                LockSupport.parkNanos("Waiting for window event loop to exit", 100_000L);
+            }
+            final long handle1 = handle;
+            handle = 0L;
+//            if (SharedConstants.REUSE_WINDOW) {
+//                return handle1;
+//            } else {
+//                LOGGER.info("Destroying early window...");
+//                windowEventLoop.renderLoop = null;
+//                glfwDestroyWindow(handle1);
+//                return -1;
+//            }
+            if (!Config.REUSE_EARLY_WINDOW) {
+                windowEventLoop.renderLoop = null;
+            }
+            return handle1;
         }
-        LOGGER.info("Handing early window to Minecraft...");
-        windowEventLoop.running.set(false);
-        while (windowEventLoop.isAlive()) {
-            LockSupport.parkNanos("Waiting for window event loop to exit", 100_000L);
+    }
+
+    public static void reInitLoop() {
+        synchronized (windowEventLoopSync) {
+            LOGGER.info("Reinitializing screen rendering...");
+            windowEventLoop.renderLoop = new RenderLoop();
         }
-        final long handle1 = handle;
-        handle = 0L;
-        return handle1;
     }
 
     private static void initGLFW() {
@@ -119,7 +140,6 @@ public class LoadingScreenManager {
         final long handle = GLFW.glfwCreateWindow(854, 480, "Minecraft - initializing mods...", 0L, 0L);
         // Center window
         final long monitor = glfwGetPrimaryMonitor();
-        GL.getFunctionProvider(); // Load GL functions
         if (monitor != 0L) {
             final GLFWVidMode vidmode = glfwGetVideoMode(monitor);
             if (vidmode != null) {
@@ -135,13 +155,15 @@ public class LoadingScreenManager {
     }
 
     public static RenderLoop.ProgressHolder tryCreateProgressHolder() {
-        final LoadingScreenManager.RenderLoop renderLoop = LoadingScreenManager.windowEventLoop.renderLoop;
-        return renderLoop != null ? renderLoop.new ProgressHolder() : null;
+        synchronized (windowEventLoopSync) {
+            final LoadingScreenManager.RenderLoop renderLoop = LoadingScreenManager.windowEventLoop.renderLoop;
+            return renderLoop != null ? renderLoop.new ProgressHolder() : null;
+        }
     }
 
     public static class RenderLoop {
 
-        public final GLText glt = new GLText();
+        public GLText glt = new GLText();
         public final GLText.GLTtext memoryUsage = gltCreateText();
         public final GLText.GLTtext fpsText = gltCreateText();
         private final GLText.GLTtext progressText = gltCreateText();
@@ -199,6 +221,10 @@ public class LoadingScreenManager {
             }
         }
 
+        private void terminate() {
+            glt.gltTerminate();
+        }
+
         private static class Progress {
             public volatile String text = "";
 
@@ -237,7 +263,7 @@ public class LoadingScreenManager {
         private final AtomicBoolean running = new AtomicBoolean(true);
         private final ConcurrentLinkedQueue<Runnable> queue = new ConcurrentLinkedQueue<>();
 
-        public RenderLoop renderLoop = null;
+        public volatile RenderLoop renderLoop = null;
 
         private WindowEventLoop(long handle) {
             this.handle = handle;

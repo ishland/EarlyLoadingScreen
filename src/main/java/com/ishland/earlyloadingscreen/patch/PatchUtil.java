@@ -44,37 +44,39 @@ public class PatchUtil {
             SharedConstants.LOGGER.warn("Failed to install ByteBuddyAgent, patching will not work", t);
         }
         instrumentation = inst;
-        inst.addTransformer(new ClassFileTransformer() {
-            @Override
-            public byte[] transform(ClassLoader loader, String className, Class<?> classBeingRedefined, ProtectionDomain protectionDomain, byte[] classfileBuffer) throws IllegalClassFormatException {
-                try {
-                    ClassNode node = new ClassNode();
-                    new ClassReader(classfileBuffer).accept(node, 0);
-                    boolean transformed = false;
-                    for (BytecodeTransformer transformer : transformers) {
-                        transformed |= transformer.transform(className, node);
-                    }
-                    if (transformed) {
-                        final ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS | ClassWriter.COMPUTE_FRAMES);
-                        node.accept(writer);
-                        final byte[] buf = writer.toByteArray();
-                        try {
-                            final Path path = transformerOutputPath.resolve(className + ".class");
-                            Files.createDirectories(path.getParent());
-                            Files.write(path, buf);
-                        } catch (Throwable t) {
-                            SharedConstants.LOGGER.warn("Failed to write transformed class %s to disk".formatted(className), t);
+        if (inst != null) {
+            inst.addTransformer(new ClassFileTransformer() {
+                @Override
+                public byte[] transform(ClassLoader loader, String className, Class<?> classBeingRedefined, ProtectionDomain protectionDomain, byte[] classfileBuffer) throws IllegalClassFormatException {
+                    try {
+                        ClassNode node = new ClassNode();
+                        new ClassReader(classfileBuffer).accept(node, 0);
+                        boolean transformed = false;
+                        for (BytecodeTransformer transformer : transformers) {
+                            transformed |= transformer.transform(className, node);
                         }
-                        return buf;
-                    } else {
+                        if (transformed) {
+                            final ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS | ClassWriter.COMPUTE_FRAMES);
+                            node.accept(writer);
+                            final byte[] buf = writer.toByteArray();
+                            try {
+                                final Path path = transformerOutputPath.resolve(className + ".class");
+                                Files.createDirectories(path.getParent());
+                                Files.write(path, buf);
+                            } catch (Throwable t) {
+                                SharedConstants.LOGGER.warn("Failed to write transformed class %s to disk".formatted(className), t);
+                            }
+                            return buf;
+                        } else {
+                            return null;
+                        }
+                    } catch (Throwable t) {
+                        SharedConstants.LOGGER.warn("Failed to transform class " + className, t);
                         return null;
                     }
-                } catch (Throwable t) {
-                    SharedConstants.LOGGER.warn("Failed to transform class " + className, t);
-                    return null;
                 }
-            }
-        }, true);
+            }, true);
+        }
     }
 
 

@@ -1,13 +1,13 @@
 package com.ishland.earlyloadingscreen.mixin;
 
+import com.ishland.earlyloadingscreen.Config;
 import com.ishland.earlyloadingscreen.LoadingScreenManager;
 import net.minecraft.client.util.Window;
 import org.lwjgl.glfw.GLFW;
+import org.lwjgl.opengl.GL;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
-
-import java.util.concurrent.locks.LockSupport;
 
 @Mixin(Window.class)
 public class MixinWindow {
@@ -21,9 +21,20 @@ public class MixinWindow {
 //        }
         final long context = LoadingScreenManager.takeContext();
         if (context != 0L) {
-            GLFW.glfwSetWindowSize(context, width, height);
-            GLFW.glfwSetWindowTitle(context, title);
-            return context;
+            if (Config.REUSE_EARLY_WINDOW) {
+                GLFW.glfwSetWindowSize(context, width, height);
+                GLFW.glfwSetWindowTitle(context, title);
+                return context;
+            } else {
+                final long newHandle = GLFW.glfwCreateWindow(width, height, title, monitor, share);
+                GLFW.glfwMakeContextCurrent(newHandle);
+                GL.createCapabilities();
+                GLFW.glfwSwapBuffers(newHandle);
+                LoadingScreenManager.reInitLoop();
+                GLFW.glfwMakeContextCurrent(0L);
+                GLFW.glfwDestroyWindow(context);
+                return newHandle;
+            }
         } else {
             return GLFW.glfwCreateWindow(width, height, title, monitor, share);
         }

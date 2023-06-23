@@ -16,7 +16,9 @@ public class TheMod implements ModInitializer {
 
     @Override
     public void onInitialize() {
-        auditMixins();
+        if (Config.ENABLE_MIXIN_PRETRANSFORM) {
+            auditMixins();
+        }
     }
 
     private static void auditMixins() {
