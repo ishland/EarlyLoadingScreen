@@ -1,4 +1,4 @@
-package com.ishland.earlyloadingscreen;
+package com.ishland.earlyloadingscreen.platform_cl;
 
 import net.fabricmc.loader.api.FabricLoader;
 
@@ -15,6 +15,7 @@ public class Config {
     public static final boolean REUSE_EARLY_WINDOW;
     public static final boolean ENABLE_ENTRYPOINT_INFORMATION;
     public static final boolean ENABLE_MIXIN_PRETRANSFORM;
+    public static final boolean HACK_VERY_EARLY_LOAD;
 
     static {
         final Properties properties = new Properties();
@@ -34,6 +35,7 @@ public class Config {
         REUSE_EARLY_WINDOW = getBoolean(properties, newProperties, "reuse_early_window", true, sb);
         ENABLE_ENTRYPOINT_INFORMATION = getBoolean(properties, newProperties, "enable_entrypoint_information", true, sb);
         ENABLE_MIXIN_PRETRANSFORM = getBoolean(properties, newProperties, "enable_mixin_pretransform", true, sb);
+        HACK_VERY_EARLY_LOAD = getBoolean(properties, newProperties, "hack_very_early_load", true, sb);
 
         try (OutputStream out = Files.newOutputStream(path, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
             newProperties.store(out, sb.toString().trim().indent(1));

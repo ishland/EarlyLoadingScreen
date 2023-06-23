@@ -15,6 +15,9 @@
     "access.IMinecraftClient"
   ],
   "injectors": {
-    "defaultRequire": 1
+    "defaultRequire": 1,
+    "injectionPoints": [
+      "com.ishland.earlyloadingscreen.EarlyLaunch"
+    ]
   }
 }
