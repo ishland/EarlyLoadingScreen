@@ -1,4 +1,4 @@
-package com.ishland.earlyloadingscreen.mixin;
+package com.ishland.earlyloadingscreen.mixin.progress;
 
 import com.ishland.earlyloadingscreen.LoadingScreenManager;
 import com.ishland.earlyloadingscreen.mixin.access.ITextureStitcherHolder;

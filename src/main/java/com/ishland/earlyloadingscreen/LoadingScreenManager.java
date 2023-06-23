@@ -248,8 +248,8 @@ public class LoadingScreenManager {
 
             public String get() {
                 final Supplier<String> supplier = this.supplier;
-                if (supplier == null) return "null";
-                final int hash = supplier.hashCode();
+                if (supplier == null) return "";
+                final int hash = System.identityHashCode(supplier);
                 if (hash != lastSupplierHash) {
                     lastSupplierHash = hash;
                     text = get0();
@@ -259,8 +259,7 @@ public class LoadingScreenManager {
 
             private String get0() {
                 try {
-                    final String s = supplier.get();
-                    return s;
+                    return supplier.get();
                 } catch (Throwable t) {
                     return "Error: " + t.getMessage();
                 }

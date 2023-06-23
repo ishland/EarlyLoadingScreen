@@ -1,4 +1,4 @@
-package com.ishland.earlyloadingscreen.mixin;
+package com.ishland.earlyloadingscreen.mixin.progress;
 
 import com.ishland.earlyloadingscreen.util.ProgressUtil;
 import net.minecraft.client.texture.SpriteContents;

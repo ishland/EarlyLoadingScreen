@@ -4,21 +4,19 @@
   "compatibilityLevel": "JAVA_17",
   "plugin": "com.ishland.earlyloadingscreen.TheMixinConfig",
   "mixins": [
-    "MixinAtlasLoader",
+    "progress.MixinAtlasLoader",
     "MixinWindow",
-    "access.ISimpleResourceReload"
+    "access.ISimpleResourceReload",
+    "progress.MixinBakedModelManager",
+    "MixinMinecraftClient",
+    "progress.MixinModelLoader",
+    "MixinSplashOverlay",
+    "progress.MixinSpriteLoader",
+    "progress.MixinTextureManager",
+    "progress.MixinTextureStitcher",
+    "access.ITextureStitcherHolder"
   ],
   "injectors": {
     "defaultRequire": 1
-  },
-  "client": [
-    "MixinBakedModelManager",
-    "MixinMinecraftClient",
-    "MixinModelLoader",
-    "MixinSplashOverlay",
-    "MixinSpriteLoader",
-    "MixinTextureManager",
-    "MixinTextureStitcher",
-    "access.ITextureStitcherHolder"
-  ]
+  }
 }
