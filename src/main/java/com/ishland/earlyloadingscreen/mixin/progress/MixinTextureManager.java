@@ -1,4 +1,4 @@
-package com.ishland.earlyloadingscreen.mixin;
+package com.ishland.earlyloadingscreen.mixin.progress;
 
 import net.minecraft.client.texture.TextureManager;
 import org.spongepowered.asm.mixin.Mixin;

@@ -5,18 +5,16 @@
   "plugin": "com.ishland.earlyloadingscreen.TheMixinConfig",
   "mixins": [
     "MixinWindow",
-    "access.ISimpleResourceReload"
+    "access.ISimpleResourceReload",
+    "MixinMinecraftClient",
+    "progress.MixinModelLoader",
+    "MixinSplashOverlay",
+    "progress.MixinSpriteAtlasTexture",
+    "progress.MixinTextureManager",
+    "progress.MixinTextureStitcher",
+    "access.IMinecraftClient"
   ],
   "injectors": {
     "defaultRequire": 1
-  },
-  "client": [
-    "MixinMinecraftClient",
-    "MixinModelLoader",
-    "MixinSplashOverlay",
-    "MixinSpriteAtlasTexture",
-    "MixinTextureManager",
-    "MixinTextureStitcher",
-    "access.IMinecraftClient"
-  ]
+  }
 }
