@@ -16,6 +16,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.Slice;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
@@ -112,6 +113,13 @@ public abstract class MixinModelLoader {
     private void captureStitching(ResourceManager resourceManager, BlockColors blockColors, Profiler profiler, int mipmapLevel, CallbackInfo ci, Set<Pair<String, String>> set, Set<SpriteIdentifier> set2, Map<Identifier, List<SpriteIdentifier>> map, Iterator<Map.Entry<Identifier, List<SpriteIdentifier>>> var8, Map.Entry<Identifier, List<SpriteIdentifier>> entry, SpriteAtlasTexture spriteAtlasTexture) {
         if (modelLoadProgressHolder != null) {
             modelLoadProgressHolder.update("Stitching texture %s...".formatted(entry.getKey()));
+        }
+    }
+
+    @Inject(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/profiler/Profiler;pop()V", ordinal = 0), slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/client/texture/SpriteAtlasTexture;stitch(Lnet/minecraft/resource/ResourceManager;Ljava/util/stream/Stream;Lnet/minecraft/util/profiler/Profiler;I)Lnet/minecraft/client/texture/SpriteAtlasTexture$Data;")))
+    private void capturePostStitching(CallbackInfo ci) {
+        if (modelLoadProgressHolder != null) {
+            modelLoadProgressHolder.update("Finalizing model load...");
         }
     }
 
