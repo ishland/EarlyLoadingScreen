@@ -2,6 +2,7 @@ package com.ishland.earlyloadingscreen.mixin;
 
 import com.ishland.earlyloadingscreen.Config;
 import com.ishland.earlyloadingscreen.LoadingScreenManager;
+import com.ishland.earlyloadingscreen.SharedConstants;
 import net.minecraft.client.util.Window;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL;
@@ -32,6 +33,7 @@ public class MixinWindow {
                 GLFW.glfwSwapBuffers(newHandle);
                 LoadingScreenManager.reInitLoop();
                 GLFW.glfwMakeContextCurrent(0L);
+                SharedConstants.LOGGER.info("Destroying early window");
                 GLFW.glfwDestroyWindow(context);
                 return newHandle;
             }
