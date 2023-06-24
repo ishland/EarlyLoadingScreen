@@ -1,9 +1,41 @@
-# Fabric Example Mod
+# Early Loading Screen
 
-## Setup
+A Fabric mod that shows an early loading screen and display information while the game is loading. 
 
-For setup instructions please see the [fabric wiki page](https://fabricmc.net/wiki/tutorial:setup) that relates to the IDE that you are using.
+## Compatibility
+This mod has been tested with AOF6 with Prism Launcher and default settings without any issues.
 
-## License
+## Configuration
 
-This template is available under the CC0 license. Feel free to learn from it and incorporate it in your own projects.
+All configuration is done in the `early-loading-screen.properties` file in the config folder.
+
+### `window_creation_point`
+Available options: `mixinEarly` `mixinLoad` `preLaunch` `mcEarly` `off`  
+Default: `mixinEarly`
+
+This controls the point when the window is created. 
+The available options above are sorted in order of earliest to latest.
+The option `mixinEarly` does some classloading hacks, use `mixinLoad` if you have issues with it.
+
+Use `off` to turn off early screen entirely.
+
+### `enable_entrypoint_information`
+Available options: `true` `false`
+Default: `true`
+
+This controls whether the entrypoint information is shown on the early screen.
+When this is enabled, it will apply patches to the fabric-loader to show entrypoint invocation process.
+Disable if you have weird issues with the game launch.
+
+### `reuse_early_window`
+Available options: `true` `false`
+Default: `true`
+
+This controls whether the early screen is reused as the game window.
+
+### `enable_mixin_pretransform`
+Available options: `true` `false`
+Default: `true`
+
+This controls whether mixins apply runs early. 
+
