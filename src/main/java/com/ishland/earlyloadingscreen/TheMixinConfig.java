@@ -2,7 +2,6 @@ package com.ishland.earlyloadingscreen;
 
 import com.ishland.earlyloadingscreen.platform_cl.Config;
 import com.ishland.earlyloadingscreen.platform_cl.LaunchPoint;
-import com.llamalad7.mixinextras.MixinExtrasBootstrap;
 import org.objectweb.asm.tree.ClassNode;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
@@ -13,7 +12,7 @@ import java.util.Set;
 public class TheMixinConfig implements IMixinConfigPlugin {
     @Override
     public void onLoad(String mixinPackage) {
-        MixinExtrasBootstrap.init();
+//        MixinExtrasBootstrap.init();
         Config.init();
         if (Config.WINDOW_CREATION_POINT.ordinal() <= LaunchPoint.mixinLoad.ordinal()) {
             Launch.initAndCreateWindow(false);
