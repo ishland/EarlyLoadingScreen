@@ -42,6 +42,7 @@ import static org.lwjgl.glfw.GLFW.glfwGetFramebufferSize;
 import static org.lwjgl.glfw.GLFW.glfwGetPrimaryMonitor;
 import static org.lwjgl.glfw.GLFW.glfwGetVideoMode;
 import static org.lwjgl.glfw.GLFW.glfwSetWindowPos;
+import static org.lwjgl.opengl.GL11.glViewport;
 import static org.lwjgl.opengl.GL32.GL_COLOR_BUFFER_BIT;
 import static org.lwjgl.opengl.GL32.GL_DEPTH_BUFFER_BIT;
 import static org.lwjgl.opengl.GL32.glClear;
@@ -384,6 +385,7 @@ public class LoadingScreenManager {
                     int[] width = new int[1];
                     int[] height = new int[1];
                     glfwGetFramebufferSize(glfwGetCurrentContext(), width, height);
+                    glViewport(0, 0, width[0], height[0]);
                     renderLoop.render(width[0], height[0]);
 
                     GLFW.glfwPollEvents();
