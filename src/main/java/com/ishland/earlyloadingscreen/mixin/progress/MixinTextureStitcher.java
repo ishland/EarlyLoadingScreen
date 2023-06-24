@@ -2,7 +2,6 @@ package com.ishland.earlyloadingscreen.mixin.progress;
 
 import com.ishland.earlyloadingscreen.LoadingScreenManager;
 import com.ishland.earlyloadingscreen.mixin.access.ITextureStitcherHolder;
-import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import net.minecraft.client.texture.TextureStitcher;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
