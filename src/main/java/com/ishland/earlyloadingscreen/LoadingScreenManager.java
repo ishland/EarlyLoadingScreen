@@ -5,6 +5,7 @@ import com.google.common.collect.Lists;
 import com.ishland.earlyloadingscreen.platform_cl.AppLoaderAccessSupport;
 import com.ishland.earlyloadingscreen.platform_cl.Config;
 import com.ishland.earlyloadingscreen.render.GLText;
+import io.netty.util.internal.PlatformDependent;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.glfw.Callbacks;
@@ -23,7 +24,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -41,6 +41,7 @@ import static org.lwjgl.glfw.GLFW.glfwGetCurrentContext;
 import static org.lwjgl.glfw.GLFW.glfwGetFramebufferSize;
 import static org.lwjgl.glfw.GLFW.glfwGetPrimaryMonitor;
 import static org.lwjgl.glfw.GLFW.glfwGetVideoMode;
+import static org.lwjgl.glfw.GLFW.glfwPollEvents;
 import static org.lwjgl.glfw.GLFW.glfwSetWindowPos;
 import static org.lwjgl.opengl.GL11.glViewport;
 import static org.lwjgl.opengl.GL32.GL_COLOR_BUFFER_BIT;
@@ -59,7 +60,7 @@ public class LoadingScreenManager {
 
     static {
         LOGGER.info("Initializing LoadingScreenManager...");
-        windowEventLoop = new WindowEventLoop();
+        windowEventLoop = new WindowEventLoop(PlatformDependent.isWindows());
         AppLoaderAccessSupport.setAccess(LoadingScreenManager::tryCreateProgressHolder);
     }
 
@@ -76,13 +77,16 @@ public class LoadingScreenManager {
             LOGGER.info("Creating early window...");
             try {
                 initGLFW();
-                handle = initWindow();
+                if (!PlatformDependent.isWindows()) {
+                    handle = initWindow();
+                }
             } catch (Throwable t) {
                 LOGGER.error("Failed to create early window", t);
                 return;
             }
             eventLoopStarted = true;
             windowEventLoop.start();
+            glfwPollEvents();
         }
     }
 
@@ -339,17 +343,24 @@ public class LoadingScreenManager {
         private final AtomicBoolean running = new AtomicBoolean(true);
         private final ConcurrentLinkedQueue<Runnable> queue = new ConcurrentLinkedQueue<>();
 
+        private volatile boolean needsCreateWindow;
         private volatile boolean initialized = false;
         public volatile RenderLoop renderLoop = null;
 
-        private WindowEventLoop() {
+        private WindowEventLoop(boolean needsCreateWindow) {
             super("EarlyLoadingScreen - Render Thread");
+            this.needsCreateWindow = needsCreateWindow;
         }
 
         @Override
         public void run() {
-            long handle = LoadingScreenManager.handle;
             try {
+                long handle;
+                if (needsCreateWindow) {
+                    LoadingScreenManager.handle = handle = initWindow();
+                } else {
+                    handle = LoadingScreenManager.handle;
+                }
                 GLFW.glfwMakeContextCurrent(handle);
                 GL.createCapabilities();
                 glClearColor(0.0F, 0.0F, 0.0F, 0.0F);
@@ -388,7 +399,9 @@ public class LoadingScreenManager {
                     glViewport(0, 0, width[0], height[0]);
                     renderLoop.render(width[0], height[0]);
 
-                    GLFW.glfwPollEvents();
+                    if (!PlatformDependent.isOsx()) {
+                        GLFW.glfwPollEvents();
+                    }
                     GLFW.glfwSwapBuffers(handle);
                     fpsCounter ++;
                     final long currentTime = System.nanoTime();
@@ -409,6 +422,7 @@ public class LoadingScreenManager {
             } finally {
                 Callbacks.glfwFreeCallbacks(handle);
                 GLFW.glfwMakeContextCurrent(0L);
+                needsCreateWindow = false;
                 initialized = true;
             }
         }
@@ -419,7 +433,11 @@ public class LoadingScreenManager {
         }
 
         public void setWindowTitle(CharSequence title) {
-            GLFW.glfwSetWindowTitle(handle, title);
+            if (needsCreateWindow) {
+                this.execute(() -> GLFW.glfwSetWindowTitle(handle, title));
+            } else {
+                GLFW.glfwSetWindowTitle(handle, title);
+            }
         }
     }
 
