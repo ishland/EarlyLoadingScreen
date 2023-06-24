@@ -8,3 +8,5 @@ pluginManagement {
         gradlePluginPortal()
     }
 }
+
+rootProject.name = "EarlyLoadingScreen" // avoid weirdness when building the project using another directory name
