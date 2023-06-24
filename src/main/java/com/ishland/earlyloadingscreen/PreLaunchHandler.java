@@ -1,10 +1,15 @@
 package com.ishland.earlyloadingscreen;
 
+import com.ishland.earlyloadingscreen.platform_cl.Config;
+import com.ishland.earlyloadingscreen.platform_cl.LaunchPoint;
 import net.fabricmc.loader.api.entrypoint.PreLaunchEntrypoint;
 
 public class PreLaunchHandler implements PreLaunchEntrypoint {
     @Override
     public void onPreLaunch() {
-        LoadingScreenManager.windowEventLoop.setWindowTitle("Minecraft - Launching...");
+        if (Config.WINDOW_CREATION_POINT.ordinal() <= LaunchPoint.preLaunch.ordinal()) {
+            Launch.initAndCreateWindow(false);
+            LoadingScreenManager.windowEventLoop.setWindowTitle("Minecraft - Launching...");
+        }
     }
 }

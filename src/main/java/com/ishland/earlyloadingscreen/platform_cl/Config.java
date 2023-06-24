@@ -15,7 +15,7 @@ public class Config {
     public static final boolean REUSE_EARLY_WINDOW;
     public static final boolean ENABLE_ENTRYPOINT_INFORMATION;
     public static final boolean ENABLE_MIXIN_PRETRANSFORM;
-    public static final boolean HACK_VERY_EARLY_LOAD;
+    public static final LaunchPoint WINDOW_CREATION_POINT;
 
     static {
         final Properties properties = new Properties();
@@ -35,7 +35,7 @@ public class Config {
         REUSE_EARLY_WINDOW = getBoolean(properties, newProperties, "reuse_early_window", true, sb);
         ENABLE_ENTRYPOINT_INFORMATION = getBoolean(properties, newProperties, "enable_entrypoint_information", true, sb);
         ENABLE_MIXIN_PRETRANSFORM = getBoolean(properties, newProperties, "enable_mixin_pretransform", true, sb);
-        HACK_VERY_EARLY_LOAD = getBoolean(properties, newProperties, "hack_very_early_load", true, sb);
+        WINDOW_CREATION_POINT = getEnum(LaunchPoint.class, properties, newProperties, "window_creation_point", LaunchPoint.mixinEarly, sb);
 
         try (OutputStream out = Files.newOutputStream(path, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
             newProperties.store(out, sb.toString().trim().indent(1));
@@ -66,6 +66,25 @@ public class Config {
             newProperties.setProperty(key, String.valueOf(b));
             return b;
         } catch (NumberFormatException e) {
+            newProperties.setProperty(key, "default");
+            return def;
+        }
+    }
+
+    private static <T extends Enum<T>> T getEnum(Class<T> clazz, Properties properties, Properties newProperties, String key, T def, StringBuilder comment) {
+        comment.append(key).append(" available [default] options: ");
+        for (T constant : clazz.getEnumConstants()) {
+            if (constant == def) comment.append('[');
+            comment.append(constant.name());
+            if (constant == def) comment.append(']');
+            comment.append(' ');
+        }
+
+        try {
+            final T configured = Enum.valueOf(clazz, String.valueOf(properties.getProperty(key)));
+            newProperties.setProperty(key, String.valueOf(configured));
+            return configured;
+        } catch (IllegalArgumentException e) {
             newProperties.setProperty(key, "default");
             return def;
         }
