@@ -2,6 +2,7 @@ package com.ishland.earlyloadingscreen;
 
 import com.ishland.earlyloadingscreen.platform_cl.AppLoaderAccessSupport;
 import com.ishland.earlyloadingscreen.platform_cl.Config;
+import com.ishland.earlyloadingscreen.platform_cl.LaunchPoint;
 import com.ishland.earlyloadingscreen.util.AppLoaderUtil;
 import net.bytebuddy.agent.ByteBuddyAgent;
 import net.fabricmc.loader.impl.FabricLoaderImpl;
@@ -32,7 +33,7 @@ public class EarlyLaunch {
         System.out.println(String.format("Loading EarlyLoadingScreen early on ClassLoader %s", classLoader.getClass().getName()));
         Config.init();
 
-        if (!Config.HACK_VERY_EARLY_LOAD) {
+        if (Config.WINDOW_CREATION_POINT.ordinal() > LaunchPoint.mixinEarly.ordinal()) {
             System.out.println("[EarlyLoadingScreen] Skipping very early load");
             System.out.println(SMALL_REMINDER);
             return;
@@ -42,7 +43,7 @@ public class EarlyLaunch {
             final ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
             unlockLibraryOnKnot(contextClassLoader);
             if (contextClassLoader.getClass().isInstance(classLoader)) {
-                contextClassLoader.loadClass("com.ishland.earlyloadingscreen.Launch").getMethod("init").invoke(null);
+                launch(contextClassLoader.loadClass("com.ishland.earlyloadingscreen.Launch"));
             } else {
                 System.out.println("Relaunching on context classloader");
                 final Instrumentation inst = ByteBuddyAgent.install();
@@ -58,7 +59,7 @@ public class EarlyLaunch {
                 AppLoaderAccessSupport.LoadingScreenAccessor.class.getName();
                 AppLoaderAccessSupport.ProgressHolderAccessor.class.getName();
                 final Class<?> launchClass = defineClass(contextClassLoader, "com.ishland.earlyloadingscreen.Launch");
-                launchClass.getMethod("init").invoke(null);
+                launch(launchClass);
                 System.out.println("[EarlyLoadingScreen] Relaunched on context classloader");
             }
         } catch (Throwable t) {
@@ -66,6 +67,10 @@ public class EarlyLaunch {
             t.printStackTrace();
         }
         System.out.println(SMALL_REMINDER);
+    }
+
+    private static void launch(Class<?> launchClass) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
+        launchClass.getMethod("initAndCreateWindow", boolean.class).invoke(null, true);
     }
 
     private static void unlockLibraryOnKnot(ClassLoader knotClassLoader) {

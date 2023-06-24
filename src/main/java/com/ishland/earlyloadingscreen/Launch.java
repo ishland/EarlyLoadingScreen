@@ -7,7 +7,7 @@ public class Launch {
 
     static {
         final ClassLoader classLoader = Launch.class.getClassLoader();
-        System.out.println(String.format("Loading EarlyLoadingScreen on ClassLoader %s", classLoader.getClass().getName()));
+        SharedConstants.LOGGER.info(String.format("Loading EarlyLoadingScreen on ClassLoader %s", classLoader.getClass().getName()));
 
         Config.init();
         if (Config.ENABLE_ENTRYPOINT_INFORMATION) {
@@ -17,6 +17,13 @@ public class Launch {
     }
 
     public static void init() {
+    }
+
+    public static void initAndCreateWindow(boolean wait) {
+        LoadingScreenManager.createWindow();
+        if (wait) {
+            LoadingScreenManager.spinWaitInit();
+        }
     }
 
 }

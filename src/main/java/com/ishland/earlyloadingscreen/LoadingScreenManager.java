@@ -53,19 +53,36 @@ public class LoadingScreenManager {
 
     private static long handle;
     public static final WindowEventLoop windowEventLoop;
+    public static boolean eventLoopStarted = false;
     private static final Object windowEventLoopSync = new Object();
 
     static {
-        LOGGER.info("Creating early window...");
-        initGLFW();
-        handle = initWindow();
-        windowEventLoop = new WindowEventLoop(handle);
-        windowEventLoop.start();
+        LOGGER.info("Initializing LoadingScreenManager...");
+        windowEventLoop = new WindowEventLoop();
         AppLoaderAccessSupport.setAccess(LoadingScreenManager::tryCreateProgressHolder);
     }
 
     public static void init() {
         // intentionally empty
+    }
+
+    public static void createWindow() {
+        synchronized (windowEventLoopSync) {
+            if (handle != 0L || eventLoopStarted) {
+//                LOGGER.warn("createWindow() called twice", new Throwable());
+                return;
+            }
+            LOGGER.info("Creating early window...");
+            try {
+                initGLFW();
+                handle = initWindow();
+            } catch (Throwable t) {
+                LOGGER.error("Failed to create early window", t);
+                return;
+            }
+            eventLoopStarted = true;
+            windowEventLoop.start();
+        }
     }
 
     public static long takeContext() {
@@ -75,6 +92,7 @@ public class LoadingScreenManager {
             }
             LOGGER.info("Handing early window to Minecraft...");
             windowEventLoop.running.set(false);
+            eventLoopStarted = true;
             while (windowEventLoop.isAlive()) {
                 LockSupport.parkNanos("Waiting for window event loop to exit", 100_000L);
             }
@@ -169,14 +187,19 @@ public class LoadingScreenManager {
     }
 
     public static RenderLoop.ProgressHolder tryCreateProgressHolder() {
-        if (!LoadingScreenManager.windowEventLoop.initialized) {
-            while (!LoadingScreenManager.windowEventLoop.initialized && LoadingScreenManager.windowEventLoop.isAlive()) {
-                // spin wait, should come very soon
-            }
-        }
+        spinWaitInit();
         synchronized (windowEventLoopSync) {
             final RenderLoop renderLoop = LoadingScreenManager.windowEventLoop.renderLoop;
             return renderLoop != null ? renderLoop.new ProgressHolder() : null;
+        }
+    }
+
+    public static void spinWaitInit() {
+        if (!LoadingScreenManager.windowEventLoop.initialized) {
+            while (!LoadingScreenManager.windowEventLoop.initialized && LoadingScreenManager.windowEventLoop.isAlive()) {
+                // spin wait, should come very soon
+                Thread.onSpinWait();
+            }
         }
     }
 
@@ -307,21 +330,21 @@ public class LoadingScreenManager {
 
     public static class WindowEventLoop extends Thread implements Executor {
 
-        private final long handle;
         private final AtomicBoolean running = new AtomicBoolean(true);
         private final ConcurrentLinkedQueue<Runnable> queue = new ConcurrentLinkedQueue<>();
 
         private volatile boolean initialized = false;
         public volatile RenderLoop renderLoop = null;
 
-        private WindowEventLoop(long handle) {
-            this.handle = handle;
+        private WindowEventLoop() {
+            super("EarlyLoadingScreen - Render Thread");
         }
 
         @Override
         public void run() {
+            long handle = LoadingScreenManager.handle;
             try {
-                GLFW.glfwMakeContextCurrent(this.handle);
+                GLFW.glfwMakeContextCurrent(handle);
                 GL.createCapabilities();
                 glClearColor(0.0F, 0.0F, 0.0F, 0.0F);
                 GLFW.glfwSwapInterval(1);
@@ -348,8 +371,8 @@ public class LoadingScreenManager {
                             }
                         }
                     }
-                    if (GLFW.glfwWindowShouldClose(this.handle)) {
-                        GLFW.glfwSetWindowShouldClose(this.handle, false);
+                    if (GLFW.glfwWindowShouldClose(handle)) {
+                        GLFW.glfwSetWindowShouldClose(handle, false);
                     }
                     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -359,7 +382,7 @@ public class LoadingScreenManager {
                     renderLoop.render(width[0], height[0]);
 
                     GLFW.glfwPollEvents();
-                    GLFW.glfwSwapBuffers(this.handle);
+                    GLFW.glfwSwapBuffers(handle);
                     fpsCounter ++;
                     final long currentTime = System.nanoTime();
                     if (currentTime - lastFpsTime >= 1_000_000_000L) {
@@ -377,7 +400,7 @@ public class LoadingScreenManager {
                 LOGGER.error("Failed to render early window, exiting", t);
                 this.renderLoop = null;
             } finally {
-                Callbacks.glfwFreeCallbacks(this.handle);
+                Callbacks.glfwFreeCallbacks(handle);
                 GLFW.glfwMakeContextCurrent(0L);
                 initialized = true;
             }
@@ -389,7 +412,7 @@ public class LoadingScreenManager {
         }
 
         public void setWindowTitle(CharSequence title) {
-            GLFW.glfwSetWindowTitle(this.handle, title);
+            GLFW.glfwSetWindowTitle(handle, title);
         }
     }
 

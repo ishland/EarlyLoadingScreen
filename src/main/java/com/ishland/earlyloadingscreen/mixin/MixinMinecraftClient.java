@@ -1,7 +1,10 @@
 package com.ishland.earlyloadingscreen.mixin;
 
+import com.ishland.earlyloadingscreen.Launch;
 import com.ishland.earlyloadingscreen.LoadingScreenManager;
 import com.ishland.earlyloadingscreen.SharedConstants;
+import com.ishland.earlyloadingscreen.platform_cl.Config;
+import com.ishland.earlyloadingscreen.platform_cl.LaunchPoint;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.ModStatus;
 import org.objectweb.asm.Opcodes;
@@ -38,7 +41,10 @@ public abstract class MixinMinecraftClient {
             SharedConstants.LOGGER.error("Failed to get window title", t);
             windowTitle = "Minecraft";
         }
-        LoadingScreenManager.windowEventLoop.setWindowTitle(windowTitle + " - Loading...");
+        if (Config.WINDOW_CREATION_POINT.ordinal() <= LaunchPoint.mcEarly.ordinal()) {
+            Launch.initAndCreateWindow(false);
+            LoadingScreenManager.windowEventLoop.setWindowTitle(windowTitle + " - Loading...");
+        }
     }
 
 }

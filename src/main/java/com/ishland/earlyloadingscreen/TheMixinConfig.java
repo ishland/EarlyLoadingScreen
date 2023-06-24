@@ -1,14 +1,12 @@
 package com.ishland.earlyloadingscreen;
 
-import com.ishland.earlyloadingscreen.patch.FabricLoaderInvokePatch;
-import com.ishland.earlyloadingscreen.util.AppLoaderUtil;
+import com.ishland.earlyloadingscreen.platform_cl.Config;
+import com.ishland.earlyloadingscreen.platform_cl.LaunchPoint;
 import com.llamalad7.mixinextras.MixinExtrasBootstrap;
-import net.fabricmc.loader.api.FabricLoader;
 import org.objectweb.asm.tree.ClassNode;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
 
-import java.lang.invoke.MethodHandles;
 import java.util.List;
 import java.util.Set;
 
@@ -16,7 +14,10 @@ public class TheMixinConfig implements IMixinConfigPlugin {
     @Override
     public void onLoad(String mixinPackage) {
         MixinExtrasBootstrap.init();
-        Launch.init();
+        Config.init();
+        if (Config.WINDOW_CREATION_POINT.ordinal() <= LaunchPoint.mixinLoad.ordinal()) {
+            Launch.initAndCreateWindow(false);
+        }
     }
 
     @Override
