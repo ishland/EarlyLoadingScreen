@@ -1,6 +1,5 @@
 package com.ishland.earlyloadingscreen.platform_cl;
 
-import io.netty.util.internal.PlatformDependent;
 import net.fabricmc.loader.api.FabricLoader;
 
 import java.io.IOException;
@@ -33,7 +32,7 @@ public class Config {
         StringBuilder sb = new StringBuilder();
         sb.append("Early loading screen configuration file\n");
 
-        REUSE_EARLY_WINDOW = !PlatformDependent.isWindows() && getBoolean(properties, newProperties, "reuse_early_window", true, sb);
+        REUSE_EARLY_WINDOW = !PlatformUtil.IS_WINDOWS && getBoolean(properties, newProperties, "reuse_early_window", true, sb);
         ENABLE_ENTRYPOINT_INFORMATION = getBoolean(properties, newProperties, "enable_entrypoint_information", true, sb);
         ENABLE_MIXIN_PRETRANSFORM = getBoolean(properties, newProperties, "enable_mixin_pretransform", true, sb);
         WINDOW_CREATION_POINT = getEnum(LaunchPoint.class, properties, newProperties, "window_creation_point", LaunchPoint.mixinEarly, sb);
