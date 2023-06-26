@@ -4,8 +4,8 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.ishland.earlyloadingscreen.platform_cl.AppLoaderAccessSupport;
 import com.ishland.earlyloadingscreen.platform_cl.Config;
+import com.ishland.earlyloadingscreen.platform_cl.PlatformUtil;
 import com.ishland.earlyloadingscreen.render.GLText;
-import io.netty.util.internal.PlatformDependent;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.glfw.Callbacks;
@@ -60,7 +60,7 @@ public class LoadingScreenManager {
 
     static {
         LOGGER.info("Initializing LoadingScreenManager...");
-        windowEventLoop = new WindowEventLoop(PlatformDependent.isWindows());
+        windowEventLoop = new WindowEventLoop(PlatformUtil.IS_WINDOWS);
         AppLoaderAccessSupport.setAccess(LoadingScreenManager::tryCreateProgressHolder);
     }
 
@@ -77,7 +77,7 @@ public class LoadingScreenManager {
             LOGGER.info("Creating early window...");
             try {
                 initGLFW();
-                if (!PlatformDependent.isWindows()) {
+                if (!PlatformUtil.IS_WINDOWS) {
                     handle = initWindow();
                 }
             } catch (Throwable t) {
@@ -399,7 +399,7 @@ public class LoadingScreenManager {
                     glViewport(0, 0, width[0], height[0]);
                     renderLoop.render(width[0], height[0]);
 
-                    if (!PlatformDependent.isOsx()) {
+                    if (!PlatformUtil.IS_OSX) {
                         GLFW.glfwPollEvents();
                     }
                     GLFW.glfwSwapBuffers(handle);
