@@ -5,6 +5,7 @@ import net.minecraft.client.render.model.ModelLoader;
 import net.minecraft.client.util.ModelIdentifier;
 import net.minecraft.util.Identifier;
 import org.objectweb.asm.Opcodes;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -22,6 +23,7 @@ public abstract class MixinModelLoader {
 
     @Shadow protected abstract void addModel(ModelIdentifier modelId);
 
+    @Shadow @Final public static ModelIdentifier MISSING_ID;
     private LoadingScreenManager.RenderLoop.ProgressHolder modelLoadProgressHolder;
     private LoadingScreenManager.RenderLoop.ProgressHolder modelAdditionalLoadProgressHolder;
     private List<ModelIdentifier> deferredLoad;
@@ -51,10 +53,14 @@ public abstract class MixinModelLoader {
     @SuppressWarnings("InvalidInjectorMethodSignature")
     @Redirect(method = {"<init>", "method_4723", "method_4716"}, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/model/ModelLoader;addModel(Lnet/minecraft/client/util/ModelIdentifier;)V"))
     private void deferAddModel(ModelLoader instance, ModelIdentifier modelId) {
+        assert instance == (Object) this;
+        if (modelId == MISSING_ID) { // we don't want to defer loading of missing model
+            this.addModel(modelId);
+            return;
+        }
         if (deferredLoad != null) {
             deferredLoad.add(modelId);
         } else {
-            assert instance == (Object) this;
             this.addModel(modelId);
         }
     }
