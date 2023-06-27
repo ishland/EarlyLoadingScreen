@@ -26,6 +26,17 @@ public class TheMixinConfig implements IMixinConfigPlugin {
 
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
+        final String packageName = "com.ishland.earlyloadingscreen.mixin.";
+        if (mixinClassName.startsWith(packageName)) {
+            final String name = mixinClassName.substring(packageName.length());
+            for (String disabledMixin : Config.DISABLED_MIXINS) {
+                if (name.startsWith(disabledMixin + ".") || name.equals(disabledMixin)) {
+                    SharedConstants.LOGGER.info("Disabling mixin {} due to config", mixinClassName);
+                    return false;
+                }
+            }
+
+        }
         return true;
     }
 
