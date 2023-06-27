@@ -8,14 +8,20 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 public class Config {
+
+    private static final String MIXIN_PREFIX = "mixin.";
 
     public static final boolean REUSE_EARLY_WINDOW;
     public static final boolean ENABLE_ENTRYPOINT_INFORMATION;
     public static final boolean ENABLE_MIXIN_PRETRANSFORM;
     public static final LaunchPoint WINDOW_CREATION_POINT;
+    public static final List<String> DISABLED_MIXINS = new ArrayList<>();
 
     static {
         final Properties properties = new Properties();
@@ -36,6 +42,20 @@ public class Config {
         ENABLE_ENTRYPOINT_INFORMATION = getBoolean(properties, newProperties, "enable_entrypoint_information", true, sb);
         ENABLE_MIXIN_PRETRANSFORM = getBoolean(properties, newProperties, "enable_mixin_pretransform", true, sb);
         WINDOW_CREATION_POINT = getEnum(LaunchPoint.class, properties, newProperties, "window_creation_point", LaunchPoint.mixinEarly, sb);
+        for (Map.Entry<Object, Object> entry : properties.entrySet()) {
+            final String key = (String) entry.getKey();
+            if (key.startsWith(MIXIN_PREFIX)) {
+                final String mixin = key.substring(MIXIN_PREFIX.length());
+                if (mixin.isBlank()) continue;
+                if (parseBoolean((String) entry.getValue())) {
+                    newProperties.setProperty(key, "true");
+                } else {
+                    newProperties.setProperty(key, "false");
+                    DISABLED_MIXINS.add(mixin);
+                }
+            }
+        }
+
 
         try (OutputStream out = Files.newOutputStream(path, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
             newProperties.store(out, sb.toString().trim().indent(1));
