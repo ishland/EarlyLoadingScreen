@@ -1,6 +1,6 @@
 {
 	"schemaVersion": 1,
-	"id": "early-loading-screen",
+	"id": "earlyloadingscreen",
 	"version": "${version}",
 	"name": "Early Loading Screen",
 	"description": "A mod that shows a loading screen early when the game loads.",
@@ -12,7 +12,7 @@
 		"sources": "https://github.com/FabricMC/fabric-example-mod"
 	},
 	"license": "MIT",
-	"icon": "assets/early-loading-screen/icon.png",
+	"icon": "assets/earlyloadingscreen/icon.png",
 	"environment": "client",
 	"entrypoints": {
 		"main": [
@@ -22,9 +22,9 @@
 			"com.ishland.earlyloadingscreen.PreLaunchHandler"
 		]
 	},
-	"accessWidener": "early-loading-screen.accesswidener",
+	"accessWidener": "earlyloadingscreen.accesswidener",
 	"mixins": [
-		"early-loading-screen.mixins.json"
+		"earlyloadingscreen.mixins.json"
 	],
 	"depends": {
 		"fabricloader": ">=0.14.21",
