@@ -41,7 +41,8 @@ public class Config {
         REUSE_EARLY_WINDOW = !PlatformUtil.IS_WINDOWS && getBoolean(properties, newProperties, "reuse_early_window", true, sb);
         ENABLE_ENTRYPOINT_INFORMATION = getBoolean(properties, newProperties, "enable_entrypoint_information", true, sb);
         ENABLE_MIXIN_PRETRANSFORM = getBoolean(properties, newProperties, "enable_mixin_pretransform", true, sb);
-        WINDOW_CREATION_POINT = getEnum(LaunchPoint.class, properties, newProperties, "window_creation_point", LaunchPoint.mixinEarly, sb);
+        final LaunchPoint defaultPoint = FabricLoader.getInstance().isModLoaded("immediatelyfast") ? LaunchPoint.mixinLoad : LaunchPoint.mixinEarly;
+        WINDOW_CREATION_POINT = getEnum(LaunchPoint.class, properties, newProperties, "window_creation_point", defaultPoint, sb);
         for (Map.Entry<Object, Object> entry : properties.entrySet()) {
             final String key = (String) entry.getKey();
             if (key.startsWith(MIXIN_PREFIX)) {
