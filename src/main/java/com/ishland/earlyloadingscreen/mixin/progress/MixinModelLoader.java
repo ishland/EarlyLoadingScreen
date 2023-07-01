@@ -1,8 +1,12 @@
 package com.ishland.earlyloadingscreen.mixin.progress;
 
 import com.ishland.earlyloadingscreen.LoadingScreenManager;
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockState;
 import net.minecraft.client.render.model.ModelLoader;
 import net.minecraft.client.util.ModelIdentifier;
+import net.minecraft.registry.Registries;
+import net.minecraft.state.StateManager;
 import net.minecraft.util.Identifier;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Final;
@@ -15,6 +19,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -24,18 +29,27 @@ public abstract class MixinModelLoader {
     @Shadow protected abstract void addModel(ModelIdentifier modelId);
 
     @Shadow @Final public static ModelIdentifier MISSING_ID;
+    @Shadow @Final private static Map<Identifier, StateManager<Block, BlockState>> STATIC_DEFINITIONS;
     private LoadingScreenManager.RenderLoop.ProgressHolder modelLoadProgressHolder;
     private LoadingScreenManager.RenderLoop.ProgressHolder modelAdditionalLoadProgressHolder;
-    private List<ModelIdentifier> deferredLoad;
+    private int modelLoadProgress = 0;
+    private int modelLoadTotalEstimate;
 
     @Inject(method = "<init>", at = @At(value = "INVOKE", target = "Ljava/lang/Object;<init>()V", shift = At.Shift.AFTER))
     private void earlyInit(CallbackInfo ci) {
         modelLoadProgressHolder = LoadingScreenManager.tryCreateProgressHolder();
         modelAdditionalLoadProgressHolder = LoadingScreenManager.tryCreateProgressHolder();
-        deferredLoad = new ArrayList<>();
         if (modelLoadProgressHolder != null) {
             modelLoadProgressHolder.update(() -> "Preparing models...");
         }
+        for (Map.Entry<Identifier, StateManager<Block, BlockState>> entry : STATIC_DEFINITIONS.entrySet()) {
+            modelLoadTotalEstimate += entry.getValue().getStates().size();
+        }
+        for(Block block : Registries.BLOCK) {
+            modelLoadTotalEstimate += block.getStateManager().getStates().size();
+        }
+        modelLoadTotalEstimate += Registries.ITEM.getIds().size();
+        modelLoadTotalEstimate += 4;
     }
 
     @Inject(method = "<init>", at = @At("RETURN"))
@@ -50,35 +64,11 @@ public abstract class MixinModelLoader {
         }
     }
 
-    @SuppressWarnings("InvalidInjectorMethodSignature")
-    @Redirect(method = {"<init>", "method_4723", "method_4716"}, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/model/ModelLoader;addModel(Lnet/minecraft/client/util/ModelIdentifier;)V"))
-    private void deferAddModel(ModelLoader instance, ModelIdentifier modelId) {
-        assert instance == (Object) this;
-        if (modelId == MISSING_ID) { // we don't want to defer loading of missing model
-            this.addModel(modelId);
-            return;
-        }
-        if (deferredLoad != null) {
-            deferredLoad.add(modelId);
-        } else {
-            this.addModel(modelId);
-        }
-    }
-
-    @Inject(method = "<init>", at = @At(value = "FIELD", target = "Lnet/minecraft/client/render/model/ModelLoader;modelsToBake:Ljava/util/Map;", opcode = Opcodes.GETFIELD))
-    private void runDeferredLoad(CallbackInfo ci) {
-        if (deferredLoad != null) {
-            int index = 0;
-            int size = deferredLoad.size();
-            for (ModelIdentifier modelId : deferredLoad) {
-                if (modelLoadProgressHolder != null) {
-                    int finalIndex = index;
-                    modelLoadProgressHolder.update(() -> String.format("Loading model (%d/%d): %s", finalIndex, size, modelId));
-                }
-                index ++;
-                this.addModel(modelId);
-            }
-            deferredLoad = null;
+    @Inject(method = "addModel", at = @At("HEAD"))
+    private void progressAddModel(ModelIdentifier modelId, CallbackInfo ci) {
+        this.modelLoadProgress ++;
+        if (modelLoadProgressHolder != null) {
+            modelLoadProgressHolder.update(() -> String.format("Loading model (%d/~%d): %s", this.modelLoadProgress, this.modelLoadTotalEstimate, modelId));
         }
     }
 
@@ -101,14 +91,14 @@ public abstract class MixinModelLoader {
 
     @Inject(method = "loadModel", at = @At("HEAD"))
     private void captureAdditionalLoadModelsPre(Identifier id, CallbackInfo ci) {
-        if (deferredLoad == null && modelAdditionalLoadProgressHolder != null) {
+        if (this.modelLoadProgress > this.modelLoadTotalEstimate && modelAdditionalLoadProgressHolder != null) {
             modelAdditionalLoadProgressHolder.update(() -> "Loading additional model %s...".formatted(id));
         }
     }
 
     @Inject(method = "loadModel", at = @At("RETURN"))
     private void captureAdditionalLoadModelsPost(Identifier id, CallbackInfo ci) {
-        if (deferredLoad == null && modelAdditionalLoadProgressHolder != null) {
+        if (this.modelLoadProgress > this.modelLoadTotalEstimate && modelAdditionalLoadProgressHolder != null) {
             modelAdditionalLoadProgressHolder.update(() -> "Loaded additional model %s".formatted(id));
         }
     }
