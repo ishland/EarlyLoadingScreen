@@ -11,7 +11,7 @@ All configuration is done in the `early-loading-screen.properties` file in the c
 
 ### `window_creation_point`
 Available options: `mixinEarly` `mixinLoad` `preLaunch` `mcEarly` `off`  
-Default: `mixinEarly`
+Default: `mixinEarly` (or `mixinLoad` if ImmediatelyFast is installed)
 
 This controls the point when the window is created. 
 The available options above are sorted in order of earliest to latest.
