@@ -6,6 +6,7 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.color.block.BlockColors;
 import net.minecraft.client.render.model.ModelLoader;
+import net.minecraft.client.render.model.UnbakedModel;
 import net.minecraft.client.texture.SpriteAtlasTexture;
 import net.minecraft.client.util.ModelIdentifier;
 import net.minecraft.client.util.SpriteIdentifier;
@@ -23,6 +24,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.Slice;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import java.util.Iterator;
@@ -30,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 @Mixin(ModelLoader.class)
 public abstract class MixinModelLoader {
@@ -38,12 +41,14 @@ public abstract class MixinModelLoader {
 
     @Shadow @Final public static ModelIdentifier MISSING_ID;
     @Shadow @Final private static Map<Identifier, StateManager<Block, BlockState>> STATIC_DEFINITIONS;
+    @Shadow @Final private Map<Identifier, UnbakedModel> modelsToBake;
     @Nullable
     private LoadingScreenManager.RenderLoop.ProgressHolder modelLoadProgressHolder;
     @Nullable
     private LoadingScreenManager.RenderLoop.ProgressHolder modelAdditionalLoadProgressHolder;
     private int modelLoadProgress = 0;
     private int modelLoadTotalEstimate;
+    private int modelDependencyResolveProgress = 0;
 
     @Inject(method = "<init>", at = @At(value = "INVOKE", target = "Ljava/lang/Object;<init>()V", shift = At.Shift.AFTER))
     private void earlyInit(CallbackInfo ci) {
@@ -79,6 +84,14 @@ public abstract class MixinModelLoader {
         this.modelLoadProgress ++;
         if (modelLoadProgressHolder != null) {
             modelLoadProgressHolder.update(() -> String.format("Loading model (%d/~%d): %s", this.modelLoadProgress, this.modelLoadTotalEstimate, modelId));
+        }
+    }
+
+    @Inject(method = "method_4732", at = @At("HEAD"))
+    private void progressModelResolution(Set<Pair<String, String>> set, UnbakedModel model, CallbackInfoReturnable<Stream<SpriteIdentifier>> cir) {
+        this.modelDependencyResolveProgress ++;
+        if (modelLoadProgressHolder != null) {
+            modelLoadProgressHolder.update(() -> String.format("Resolving model dependencies (%d/%d): %s", this.modelDependencyResolveProgress, this.modelsToBake.size(), model));
         }
     }
 
