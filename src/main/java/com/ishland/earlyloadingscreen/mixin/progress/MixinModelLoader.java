@@ -14,6 +14,7 @@ import net.minecraft.state.StateManager;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.profiler.Profiler;
 import net.minecraft.util.registry.Registry;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -37,7 +38,9 @@ public abstract class MixinModelLoader {
 
     @Shadow @Final public static ModelIdentifier MISSING_ID;
     @Shadow @Final private static Map<Identifier, StateManager<Block, BlockState>> STATIC_DEFINITIONS;
+    @Nullable
     private LoadingScreenManager.RenderLoop.ProgressHolder modelLoadProgressHolder;
+    @Nullable
     private LoadingScreenManager.RenderLoop.ProgressHolder modelAdditionalLoadProgressHolder;
     private int modelLoadProgress = 0;
     private int modelLoadTotalEstimate;
@@ -74,7 +77,9 @@ public abstract class MixinModelLoader {
     @Inject(method = "addModel", at = @At("HEAD"))
     private void progressAddModel(ModelIdentifier modelId, CallbackInfo ci) {
         this.modelLoadProgress ++;
-        modelLoadProgressHolder.update(() -> String.format("Loading model (%d/~%d): %s", this.modelLoadProgress, this.modelLoadTotalEstimate, modelId));
+        if (modelLoadProgressHolder != null) {
+            modelLoadProgressHolder.update(() -> String.format("Loading model (%d/~%d): %s", this.modelLoadProgress, this.modelLoadTotalEstimate, modelId));
+        }
     }
 
     @Redirect(method = "upload", at = @At(value = "INVOKE", target = "Ljava/util/Set;forEach(Ljava/util/function/Consumer;)V"))

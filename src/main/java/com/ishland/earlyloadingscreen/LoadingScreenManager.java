@@ -7,6 +7,7 @@ import com.ishland.earlyloadingscreen.platform_cl.Config;
 import com.ishland.earlyloadingscreen.platform_cl.PlatformUtil;
 import com.ishland.earlyloadingscreen.render.GLText;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.glfw.Callbacks;
 import org.lwjgl.glfw.GLFW;
@@ -191,6 +192,7 @@ public class LoadingScreenManager {
         return handle;
     }
 
+    @Nullable
     public static RenderLoop.ProgressHolder tryCreateProgressHolder() {
         spinWaitInit();
         synchronized (windowEventLoopSync) {
