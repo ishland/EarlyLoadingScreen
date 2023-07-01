@@ -30,6 +30,7 @@ Disable if you have weird issues with the game launch.
 ### `reuse_early_window`
 Available options: `true` `false`
 Default: `true`
+Not available on Windows.
 
 This controls whether the early screen is reused as the game window.
 
