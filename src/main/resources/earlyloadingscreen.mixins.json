@@ -17,7 +17,7 @@
   "injectors": {
     "defaultRequire": 1,
     "injectionPoints": [
-      "com.ishland.earlyloadingscreen.EarlyLaunch"
+      "com.ishland.earlyloadingscreen.MixinEarlyLaunch"
     ]
   }
 }
