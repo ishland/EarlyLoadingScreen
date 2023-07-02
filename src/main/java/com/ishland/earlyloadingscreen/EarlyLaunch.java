@@ -22,22 +22,14 @@ import java.util.Set;
 
 public class EarlyLaunch {
 
-    public static final String SMALL_REMINDER = "The following \"Unable to register injection point\" can be safely ignored. ";
-
-    static {
-        load0();
-    }
-
-    private static void load0() {
+    static void load0(LaunchPoint point) {
         final ClassLoader classLoader = EarlyLaunch.class.getClassLoader();
-        System.out.println(String.format("Loading EarlyLoadingScreen early on ClassLoader %s", classLoader.getClass().getName()));
         Config.init();
 
-        if (Config.WINDOW_CREATION_POINT.ordinal() > LaunchPoint.mixinEarly.ordinal()) {
-            System.out.println("[EarlyLoadingScreen] Skipping very early load");
-            System.out.println(SMALL_REMINDER);
+        if (Config.WINDOW_CREATION_POINT.ordinal() > point.ordinal()) {
             return;
         }
+        System.out.println(String.format("Loading EarlyLoadingScreen early on ClassLoader %s", classLoader.getClass().getName()));
 
         try {
             final ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
@@ -66,7 +58,6 @@ public class EarlyLaunch {
             System.out.println("[EarlyLoadingScreen] Failed to launch early");
             t.printStackTrace();
         }
-        System.out.println(SMALL_REMINDER);
     }
 
     private static void launch(Class<?> launchClass) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
