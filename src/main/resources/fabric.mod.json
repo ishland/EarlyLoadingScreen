@@ -26,6 +26,9 @@
 	"mixins": [
 		"earlyloadingscreen.mixins.json"
 	],
+	"languageAdapters": {
+		"earlyloadingscreen:languageAdapterEarlyLaunch": "com.ishland.earlyloadingscreen.LanguageAdapterLaunch"
+	},
 	"depends": {
 		"fabricloader": ">=0.14.21",
 		"minecraft": "*",
