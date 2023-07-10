@@ -34,6 +34,7 @@ public class MixinWindow {
         final long context = LoadingScreenManager.takeContext();
         if (context != 0L) {
             if (Config.REUSE_EARLY_WINDOW) {
+                GLFW.glfwRestoreWindow(context);
                 GLFW.glfwSetWindowSize(context, width, height);
                 GLFW.glfwSetWindowTitle(context, title);
                 return context;
