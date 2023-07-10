@@ -189,6 +189,20 @@ public class LoadingScreenManager {
             }
         }
 
+        int[] width0 = new int[1];
+        int[] height0 = new int[1];
+        glfwGetFramebufferSize(handle, width0, height0);
+        windowEventLoop.framebufferWidth = width0[0];
+        windowEventLoop.framebufferHeight = height0[0];
+        GLFW.glfwSetFramebufferSizeCallback(handle, (window, width, height) -> {
+            windowEventLoop.framebufferWidth = width;
+            windowEventLoop.framebufferHeight = height;
+        });
+        GLFW.glfwSetWindowPosCallback(handle, (window, xpos, ypos) -> {});
+        GLFW.glfwSetWindowSizeCallback(handle, (window, width, height) -> {});
+        GLFW.glfwSetWindowFocusCallback(handle, (window, focused) -> {});
+        GLFW.glfwSetCursorEnterCallback(handle, (window, entered) -> {});
+
         return handle;
     }
 
@@ -343,6 +357,8 @@ public class LoadingScreenManager {
         private volatile boolean needsCreateWindow;
         private volatile boolean initialized = false;
         public volatile RenderLoop renderLoop = null;
+        private volatile int framebufferWidth = 0;
+        private volatile int framebufferHeight = 0;
 
         private WindowEventLoop(boolean needsCreateWindow) {
             super("EarlyLoadingScreen - Render Thread");
@@ -390,11 +406,8 @@ public class LoadingScreenManager {
                     }
                     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-                    int[] width = new int[1];
-                    int[] height = new int[1];
-                    glfwGetFramebufferSize(glfwGetCurrentContext(), width, height);
-                    glViewport(0, 0, width[0], height[0]);
-                    renderLoop.render(width[0], height[0]);
+                    glViewport(0, 0, framebufferWidth, framebufferHeight);
+                    renderLoop.render(framebufferWidth, framebufferHeight);
 
                     if (!PlatformUtil.IS_OSX) {
                         GLFW.glfwPollEvents();
