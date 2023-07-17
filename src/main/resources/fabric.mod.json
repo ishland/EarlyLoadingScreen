@@ -8,8 +8,8 @@
 		"ishland"
 	],
 	"contact": {
-		"homepage": "https://fabricmc.net/",
-		"sources": "https://github.com/FabricMC/fabric-example-mod"
+		"homepage": "https://github.com/ishland/EarlyLoadingScreen",
+		"sources": "https://github.com/ishland/EarlyLoadingScreen"
 	},
 	"license": "MIT",
 	"icon": "assets/earlyloadingscreen/icon.png",
