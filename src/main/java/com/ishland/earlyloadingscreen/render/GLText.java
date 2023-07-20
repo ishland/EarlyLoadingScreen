@@ -1094,7 +1094,7 @@ public class GLText {
 
             uniform sampler2D diffuse;
 
-            uniform vec4 color = vec4(1.0, 1.0, 1.0, 1.0);
+            uniform vec4 color;
 
             in vec2 fTexCoord;
 
@@ -1201,6 +1201,8 @@ public class GLText {
 
         _gltText2DShaderMVPUniformLocation = glGetUniformLocation(_gltText2DShader, "mvp");
         _gltText2DShaderColorUniformLocation = glGetUniformLocation(_gltText2DShader, "color");
+
+        gltColor(1.0F, 1.0F, 1.0F, 1.0F);
 
         glUniform1i(glGetUniformLocation(_gltText2DShader, "diffuse"), 0);
 
