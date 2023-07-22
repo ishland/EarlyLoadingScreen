@@ -6,6 +6,8 @@ import com.ishland.earlyloadingscreen.platform_cl.AppLoaderAccessSupport;
 import com.ishland.earlyloadingscreen.platform_cl.Config;
 import com.ishland.earlyloadingscreen.platform_cl.PlatformUtil;
 import com.ishland.earlyloadingscreen.render.GLText;
+import net.fabricmc.loader.impl.FabricLoaderImpl;
+import net.fabricmc.loader.impl.util.Arguments;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.glfw.Callbacks;
@@ -194,7 +196,16 @@ public class LoadingScreenManager {
         GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_VERSION_MINOR, 2);
         GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_PROFILE, GLFW.GLFW_OPENGL_CORE_PROFILE);
         GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_FORWARD_COMPAT, 1);
-        final long handle = GLFW.glfwCreateWindow(854, 480, "Minecraft - initializing mods...", 0L, 0L);
+        int configuredWidth = 854;
+        int configuredHeight = 480;
+        try {
+            final Arguments arguments = FabricLoaderImpl.INSTANCE.getGameProvider().getArguments();
+            configuredWidth = Integer.parseInt(arguments.getOrDefault("width", "854"));
+            configuredHeight = Integer.parseInt(arguments.getOrDefault("height", "480"));
+        } catch (Throwable t) {
+            LOGGER.error("Failed to load window configuration", t);
+        }
+        final long handle = GLFW.glfwCreateWindow(configuredWidth, configuredHeight, "Minecraft - initializing mods...", 0L, 0L);
         // Center window
         final long monitor = glfwGetPrimaryMonitor();
         if (monitor != 0L) {
@@ -202,8 +213,8 @@ public class LoadingScreenManager {
             if (vidmode != null) {
                 glfwSetWindowPos(
                         handle,
-                        (vidmode.width() - 854) / 2,
-                        (vidmode.height() - 480) / 2
+                        (vidmode.width() - configuredWidth) / 2,
+                        (vidmode.height() - configuredHeight) / 2
                 );
             }
         }
