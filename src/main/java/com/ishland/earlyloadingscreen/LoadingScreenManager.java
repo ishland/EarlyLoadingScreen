@@ -41,6 +41,7 @@ import static org.lwjgl.glfw.GLFW.glfwGetCurrentContext;
 import static org.lwjgl.glfw.GLFW.glfwGetFramebufferSize;
 import static org.lwjgl.glfw.GLFW.glfwGetPrimaryMonitor;
 import static org.lwjgl.glfw.GLFW.glfwGetVideoMode;
+import static org.lwjgl.glfw.GLFW.glfwGetWindowSize;
 import static org.lwjgl.glfw.GLFW.glfwPollEvents;
 import static org.lwjgl.glfw.GLFW.glfwSetWindowPos;
 import static org.lwjgl.opengl.GL11.glViewport;
@@ -120,9 +121,28 @@ public class LoadingScreenManager {
 
     public static void reInitLoop() {
         synchronized (windowEventLoopSync) {
-            LOGGER.info("Reinitializing screen rendering...");
-            windowEventLoop.renderLoop = new RenderLoop();
+            if (windowEventLoop.renderLoop != null) {
+                LOGGER.info("Reinitializing screen rendering...");
+                windowEventLoop.renderLoop = new RenderLoop();
+            }
         }
+    }
+
+    public record WindowSettings(
+            int framebufferWidth,
+            int framebufferHeight,
+            int windowWidth,
+            int windowHeight
+    ) {
+    }
+
+    public static WindowSettings getWindowSettings() {
+        return new WindowSettings(
+                windowEventLoop.framebufferWidth,
+                windowEventLoop.framebufferHeight,
+                windowEventLoop.windowWidth,
+                windowEventLoop.windowHeight
+        );
     }
 
     private static void initGLFW() {
@@ -193,12 +213,18 @@ public class LoadingScreenManager {
         glfwGetFramebufferSize(handle, width0, height0);
         windowEventLoop.framebufferWidth = width0[0];
         windowEventLoop.framebufferHeight = height0[0];
+        glfwGetWindowSize(handle, width0, height0);
+        windowEventLoop.windowWidth = width0[0];
+        windowEventLoop.windowHeight = height0[0];
         GLFW.glfwSetFramebufferSizeCallback(handle, (window, width, height) -> {
             windowEventLoop.framebufferWidth = width;
             windowEventLoop.framebufferHeight = height;
         });
         GLFW.glfwSetWindowPosCallback(handle, (window, xpos, ypos) -> {});
-        GLFW.glfwSetWindowSizeCallback(handle, (window, width, height) -> {});
+        GLFW.glfwSetWindowSizeCallback(handle, (window, width, height) -> {
+            windowEventLoop.windowWidth = width;
+            windowEventLoop.windowHeight = height;
+        });
         GLFW.glfwSetWindowFocusCallback(handle, (window, focused) -> {});
         GLFW.glfwSetCursorEnterCallback(handle, (window, entered) -> {});
 
@@ -362,6 +388,8 @@ public class LoadingScreenManager {
         public volatile RenderLoop renderLoop = null;
         private volatile int framebufferWidth = 0;
         private volatile int framebufferHeight = 0;
+        private volatile int windowWidth = 0;
+        private volatile int windowHeight = 0;
 
         private WindowEventLoop(boolean needsCreateWindow) {
             super("EarlyLoadingScreen - Render Thread");
