@@ -207,17 +207,17 @@ public class LoadingScreenManager {
         }
         final long handle = GLFW.glfwCreateWindow(configuredWidth, configuredHeight, "Minecraft - initializing mods...", 0L, 0L);
         // Center window
-        final long monitor = glfwGetPrimaryMonitor();
-        if (monitor != 0L) {
-            final GLFWVidMode vidmode = glfwGetVideoMode(monitor);
-            if (vidmode != null) {
-                glfwSetWindowPos(
-                        handle,
-                        (vidmode.width() - configuredWidth) / 2,
-                        (vidmode.height() - configuredHeight) / 2
-                );
-            }
-        }
+//        final long monitor = glfwGetPrimaryMonitor();
+//        if (monitor != 0L) {
+//            final GLFWVidMode vidmode = glfwGetVideoMode(monitor);
+//            if (vidmode != null) {
+//                glfwSetWindowPos(
+//                        handle,
+//                        (vidmode.width() - configuredWidth) / 2,
+//                        (vidmode.height() - configuredHeight) / 2
+//                );
+//            }
+//        }
 
         int[] width0 = new int[1];
         int[] height0 = new int[1];
@@ -485,10 +485,12 @@ public class LoadingScreenManager {
         }
 
         public void setWindowTitle(CharSequence title) {
-            if (needsCreateWindow) {
-                this.execute(() -> GLFW.glfwSetWindowTitle(handle, title));
-            } else {
-                GLFW.glfwSetWindowTitle(handle, title);
+            if (handle != 0L) {
+                if (needsCreateWindow) {
+                    this.execute(() -> GLFW.glfwSetWindowTitle(handle, title));
+                } else {
+                    GLFW.glfwSetWindowTitle(handle, title);
+                }
             }
         }
     }
