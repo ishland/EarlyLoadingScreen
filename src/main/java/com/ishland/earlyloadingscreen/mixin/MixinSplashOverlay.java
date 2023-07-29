@@ -2,7 +2,6 @@ package com.ishland.earlyloadingscreen.mixin;
 
 import com.ishland.earlyloadingscreen.LoadingScreenManager;
 import com.ishland.earlyloadingscreen.mixin.access.ISimpleResourceReload;
-import com.mojang.blaze3d.platform.GlStateManager;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.SplashOverlay;
 import net.minecraft.client.util.Window;
@@ -16,7 +15,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.Arrays;
-import java.util.function.Consumer;
 
 import static com.ishland.earlyloadingscreen.render.GLText.gltSetText;
 
@@ -52,8 +50,7 @@ public class MixinSplashOverlay {
                 gltSetText(renderLoop.fpsText, "");
             }
             final Window window = MinecraftClient.getInstance().getWindow();
-            renderLoop.render(window.getFramebufferWidth(), window.getFramebufferHeight());
-
+            renderLoop.render(window.getFramebufferWidth(), window.getFramebufferHeight(), (float) window.getScaleFactor() / 2.0f);
         }
     }
 
