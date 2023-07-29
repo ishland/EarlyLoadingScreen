@@ -14,7 +14,6 @@ import org.lwjgl.PointerBuffer;
 import org.lwjgl.glfw.Callbacks;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWErrorCallback;
-import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
@@ -40,13 +39,9 @@ import static com.ishland.earlyloadingscreen.render.GLText.GLT_RIGHT;
 import static com.ishland.earlyloadingscreen.render.GLText.GLT_TOP;
 import static com.ishland.earlyloadingscreen.render.GLText.gltCreateText;
 import static com.ishland.earlyloadingscreen.render.GLText.gltSetText;
-import static org.lwjgl.glfw.GLFW.glfwGetCurrentContext;
 import static org.lwjgl.glfw.GLFW.glfwGetFramebufferSize;
-import static org.lwjgl.glfw.GLFW.glfwGetPrimaryMonitor;
-import static org.lwjgl.glfw.GLFW.glfwGetVideoMode;
 import static org.lwjgl.glfw.GLFW.glfwGetWindowSize;
 import static org.lwjgl.glfw.GLFW.glfwPollEvents;
-import static org.lwjgl.glfw.GLFW.glfwSetWindowPos;
 import static org.lwjgl.opengl.GL11.glViewport;
 import static org.lwjgl.opengl.GL32.GL_COLOR_BUFFER_BIT;
 import static org.lwjgl.opengl.GL32.GL_DEPTH_BUFFER_BIT;
@@ -239,6 +234,9 @@ public class LoadingScreenManager {
         });
         GLFW.glfwSetWindowFocusCallback(handle, (window, focused) -> {});
         GLFW.glfwSetCursorEnterCallback(handle, (window, entered) -> {});
+        GLFW.glfwSetWindowContentScaleCallback(handle, (window, xscale, yscale) -> {
+            windowEventLoop.scale = Math.max(xscale, yscale);
+        });
 
         return handle;
     }
@@ -271,7 +269,7 @@ public class LoadingScreenManager {
         private final Object progressSync = new Object();
         private final Set<Progress> activeProgress = new LinkedHashSet<>();
 
-        public void render(int width, int height) {
+        public void render(int width, int height, float scale) {
 //            glfwGetFramebufferSize(glfwGetCurrentContext(), width, height);
 //            glViewport(0, 0, width[0], height[0]);
             glt.gltViewport(width, height);
@@ -287,14 +285,14 @@ public class LoadingScreenManager {
                         this.memoryUsage,
                         width,
                         0,
-                        1.0f,
+                        scale * 1.0f,
                         GLT_RIGHT, GLT_TOP
                 );
                 glt.gltDrawText2DAligned(
                         this.fpsText,
                         0,
                         0,
-                        1.0f,
+                        scale * 1.0f,
                         GLT_LEFT, GLT_TOP
                 );
 
@@ -311,7 +309,7 @@ public class LoadingScreenManager {
                         this.progressText,
                         0,
                         height,
-                        1.0f,
+                        scale * 1.0f,
                         GLT_LEFT, GLT_BOTTOM
                 );
 
@@ -398,6 +396,7 @@ public class LoadingScreenManager {
         private volatile int framebufferHeight = 0;
         private volatile int windowWidth = 0;
         private volatile int windowHeight = 0;
+        private volatile float scale = 1.0f;
 
         private WindowEventLoop(boolean needsCreateWindow) {
             super("EarlyLoadingScreen - Render Thread");
@@ -446,7 +445,7 @@ public class LoadingScreenManager {
                     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
                     glViewport(0, 0, framebufferWidth, framebufferHeight);
-                    renderLoop.render(framebufferWidth, framebufferHeight);
+                    renderLoop.render(framebufferWidth, framebufferHeight, scale);
 
                     if (!PlatformUtil.IS_OSX) {
                         GLFW.glfwPollEvents();
