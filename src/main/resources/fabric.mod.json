@@ -33,5 +33,10 @@
 		"fabricloader": ">=0.14.21",
 		"minecraft": "*",
 		"java": ">=17"
+	},
+	"custom": {
+		"sodium:options": {
+			"mixin.workarounds.context_creation": false
+		}
 	}
 }
