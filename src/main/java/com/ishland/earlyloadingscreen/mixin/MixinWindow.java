@@ -5,6 +5,7 @@ import com.ishland.earlyloadingscreen.platform_cl.Config;
 import com.ishland.earlyloadingscreen.LoadingScreenManager;
 import com.ishland.earlyloadingscreen.SharedConstants;
 import com.ishland.earlyloadingscreen.platform_cl.LaunchPoint;
+import com.ishland.earlyloadingscreen.util.WindowCreationUtil;
 import net.minecraft.client.util.Window;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL;
@@ -39,7 +40,7 @@ public class MixinWindow {
             Launch.init();
         }
         if (Config.WINDOW_CREATION_POINT == LaunchPoint.off) {
-            final long newHandle = GLFW.glfwCreateWindow(width, height, title, monitor, share);
+            final long newHandle = WindowCreationUtil.warpGlfwCreateWindow(width, height, title, monitor, share);
             initGLFWHandle(newHandle);
             return newHandle;
         }
@@ -50,14 +51,14 @@ public class MixinWindow {
                 GLFW.glfwSetWindowTitle(context, title);
                 return context;
             } else {
-                final long newHandle = GLFW.glfwCreateWindow(width, height, title, monitor, share);
+                final long newHandle = WindowCreationUtil.warpGlfwCreateWindow(width, height, title, monitor, share);
                 initGLFWHandle(newHandle);
                 SharedConstants.LOGGER.info("Destroying early window");
                 GLFW.glfwDestroyWindow(context);
                 return newHandle;
             }
         } else {
-            return GLFW.glfwCreateWindow(width, height, title, monitor, share);
+            return WindowCreationUtil.warpGlfwCreateWindow(width, height, title, monitor, share);
         }
     }
 

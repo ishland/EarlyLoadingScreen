@@ -1,6 +1,7 @@
 package com.ishland.earlyloadingscreen;
 
 import com.ishland.earlyloadingscreen.patch.FabricLoaderInvokePatch;
+import com.ishland.earlyloadingscreen.patch.SodiumOSDetectionPatch;
 import com.ishland.earlyloadingscreen.platform_cl.Config;
 
 public class Launch {
@@ -13,6 +14,7 @@ public class Launch {
         if (Config.ENABLE_ENTRYPOINT_INFORMATION) {
             FabricLoaderInvokePatch.init();
         }
+        SodiumOSDetectionPatch.init();
         LoadingScreenManager.init();
     }
 
