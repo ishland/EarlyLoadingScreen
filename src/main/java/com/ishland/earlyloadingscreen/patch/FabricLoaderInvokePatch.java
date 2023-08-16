@@ -1,5 +1,7 @@
 package com.ishland.earlyloadingscreen.patch;
 
+import com.ishland.earlyloadingscreen.LoadingProgressManager;
+import com.ishland.earlyloadingscreen.LoadingScreenManager;
 import com.ishland.earlyloadingscreen.SharedConstants;
 import com.ishland.earlyloadingscreen.platform_cl.AppLoaderAccessSupport;
 import com.ishland.earlyloadingscreen.util.AppLoaderUtil;
@@ -47,6 +49,7 @@ public class FabricLoaderInvokePatch implements BytecodeTransformer {
         Instrumentation inst = PatchUtil.instrumentation;
         if (inst == null) {
             SharedConstants.LOGGER.warn("Instrumentation unavailable, entrypoint information will not be available");
+            LoadingProgressManager.showMessageAsProgress("Instrumentation unavailable, entrypoint information will not be available");
             return;
         }
         try {
@@ -58,6 +61,7 @@ public class FabricLoaderInvokePatch implements BytecodeTransformer {
             AppLoaderUtil.init();
         } catch (Throwable t) {
             SharedConstants.LOGGER.warn("Failed to define classes on AppClassLoader, entrypoint information will not be available", t);
+            LoadingProgressManager.showMessageAsProgress("Failed to define classes on AppClassLoader, entrypoint information will not be available");
             return;
         }
         PatchUtil.transformers.add(INSTANCE);
@@ -66,6 +70,7 @@ public class FabricLoaderInvokePatch implements BytecodeTransformer {
             inst.retransformClasses(EntrypointUtils.class);
         } catch (Throwable t) {
             SharedConstants.LOGGER.warn("Failed to retransform EntrypointUtils, attempting to revert changes", t);
+            LoadingProgressManager.showMessageAsProgress("Failed to retransform EntrypointUtils, entrypoint information will not be available");
             PatchUtil.transformers.remove(INSTANCE);
             try {
                 inst.retransformClasses(Class.forName("net.fabricmc.loader.impl.launch.knot.KnotClassDelegate"));

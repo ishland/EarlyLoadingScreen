@@ -1,5 +1,6 @@
 package com.ishland.earlyloadingscreen.mixin.progress;
 
+import com.ishland.earlyloadingscreen.LoadingProgressManager;
 import com.ishland.earlyloadingscreen.LoadingScreenManager;
 import com.ishland.earlyloadingscreen.mixin.access.ITextureStitcherHolder;
 import net.minecraft.client.texture.TextureStitcher;
@@ -17,11 +18,11 @@ import java.util.ListIterator;
 @Mixin(TextureStitcher.class)
 public class MixinTextureStitcher<T extends TextureStitcher.Stitchable> {
 
-    private LoadingScreenManager.RenderLoop.ProgressHolder progressHolder;
+    private LoadingProgressManager.ProgressHolder progressHolder;
 
     @Inject(method = "stitch", at = @At("HEAD"))
     private void preStitch(CallbackInfo ci) {
-        progressHolder = LoadingScreenManager.tryCreateProgressHolder();
+        progressHolder = LoadingProgressManager.tryCreateProgressHolder();
         if (progressHolder != null) {
             progressHolder.update(() -> "Stitiching textures...");
         }

@@ -1,5 +1,6 @@
 package com.ishland.earlyloadingscreen.util;
 
+import com.ishland.earlyloadingscreen.LoadingProgressManager;
 import com.ishland.earlyloadingscreen.LoadingScreenManager;
 
 import java.util.List;
@@ -10,7 +11,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class ProgressUtil {
 
     public static void createProgress(List<? extends CompletionStage<?>> futures, CompletionStage<?> combined, String name) {
-        final LoadingScreenManager.RenderLoop.ProgressHolder holder = LoadingScreenManager.tryCreateProgressHolder();
+        final LoadingProgressManager.ProgressHolder holder = LoadingProgressManager.tryCreateProgressHolder();
         if (holder != null) {
             AtomicInteger counter = new AtomicInteger();
             int total = futures.size();
