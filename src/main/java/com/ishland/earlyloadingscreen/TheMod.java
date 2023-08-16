@@ -42,7 +42,7 @@ public class TheMod implements ModInitializer {
                     final Set<String> unhandledTargets = (Set<String>) getUnhandledTargetsMethod.invoke(config);
                     unhandled.addAll(unhandledTargets);
                 }
-                try (LoadingScreenManager.RenderLoop.ProgressHolder progressHolder = LoadingScreenManager.tryCreateProgressHolder()) {
+                try (LoadingProgressManager.ProgressHolder progressHolder = LoadingProgressManager.tryCreateProgressHolder()) {
                     int index = 0;
                     int total = unhandled.size();
                     for (String s : unhandled) {
