@@ -2,6 +2,7 @@ package com.ishland.earlyloadingscreen;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.ishland.earlyloadingscreen.platform_cl.AppLoaderAccessSupport;
 import com.ishland.earlyloadingscreen.platform_cl.Config;
 import com.ishland.earlyloadingscreen.platform_cl.PlatformUtil;
@@ -29,6 +30,10 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.LockSupport;
 import java.util.function.Supplier;
@@ -52,6 +57,7 @@ import static org.lwjgl.opengl.GL32.glClearColor;
 public class LoadingScreenManager {
 
     public static final Cleaner CLEANER = Cleaner.create();
+    public static final ScheduledExecutorService SCHEDULER = Executors.newSingleThreadScheduledExecutor(new ThreadFactoryBuilder().setDaemon(true).setNameFormat("EarlyLoadingScreen Scheduler").build());
 
     private static long handle;
     public static final WindowEventLoop windowEventLoop;
@@ -61,7 +67,7 @@ public class LoadingScreenManager {
     static {
         LOGGER.info("Initializing LoadingScreenManager...");
         windowEventLoop = new WindowEventLoop(PlatformUtil.IS_WINDOWS);
-        AppLoaderAccessSupport.setAccess(LoadingScreenManager::tryCreateProgressHolder);
+        AppLoaderAccessSupport.setAccess(LoadingProgressManager::tryCreateProgressHolder);
     }
 
     public static void init() {
@@ -242,15 +248,6 @@ public class LoadingScreenManager {
         return handle;
     }
 
-    @Nullable
-    public static RenderLoop.ProgressHolder tryCreateProgressHolder() {
-        spinWaitInit();
-        synchronized (windowEventLoopSync) {
-            final RenderLoop renderLoop = LoadingScreenManager.windowEventLoop.renderLoop;
-            return renderLoop != null ? renderLoop.new ProgressHolder() : null;
-        }
-    }
-
     public static void spinWaitInit() {
         if (!LoadingScreenManager.windowEventLoop.initialized) {
             while (!LoadingScreenManager.windowEventLoop.initialized && LoadingScreenManager.windowEventLoop.isAlive()) {
@@ -266,9 +263,6 @@ public class LoadingScreenManager {
         public final GLText.GLTtext memoryUsage = gltCreateText();
         public final GLText.GLTtext fpsText = gltCreateText();
         private final GLText.GLTtext progressText = gltCreateText();
-
-        private final Object progressSync = new Object();
-        private final Set<Progress> activeProgress = new LinkedHashSet<>();
 
         public void render(int width, int height, float scale) {
 //            glfwGetFramebufferSize(glfwGetCurrentContext(), width, height);
@@ -298,8 +292,9 @@ public class LoadingScreenManager {
                 );
 
                 StringBuilder sb = new StringBuilder();
-                synchronized (progressSync) {
-                    for (Progress progress : activeProgress) {
+                final Set<LoadingProgressManager.Progress> activeProgress = LoadingProgressManager.getActiveProgress();
+                synchronized (activeProgress) {
+                    for (LoadingProgressManager.Progress progress : activeProgress) {
                         final String str = progress.get();
                         if (str.isBlank()) continue;
                         sb.append(str).append('\n');
@@ -321,66 +316,6 @@ public class LoadingScreenManager {
 
         private void terminate() {
             glt.gltTerminate();
-        }
-
-        private static class Progress {
-            private volatile Supplier<String> supplier;
-            private int lastSupplierHash = 0;
-            private String text = "";
-
-            public void update(Supplier<String> text) {
-                this.supplier = text;
-            }
-
-            public String get() {
-                final Supplier<String> supplier = this.supplier;
-                if (supplier == null) return "";
-                final int hash = System.identityHashCode(supplier);
-                if (hash != lastSupplierHash) {
-                    lastSupplierHash = hash;
-                    text = get0();
-                }
-                return text;
-            }
-
-            private String get0() {
-                try {
-                    return supplier.get();
-                } catch (Throwable t) {
-                    return "Error: " + t.getMessage();
-                }
-            }
-
-        }
-
-        public class ProgressHolder implements AppLoaderAccessSupport.ProgressHolderAccessor {
-
-            private final Progress impl;
-
-            public ProgressHolder() {
-                final Set<Progress> activeProgress1 = activeProgress;
-                final Object progressSync1 = progressSync;
-                Progress progress = this.impl = new Progress();
-                CLEANER.register(this, () -> {
-                    synchronized (progressSync1) {
-                        activeProgress1.remove(progress);
-                    }
-                });
-                synchronized (progressSync) {
-                    activeProgress.add(impl);
-                }
-            }
-
-            public void update(Supplier<String> text) {
-                impl.update(text);
-            }
-
-            @Override
-            public void close() {
-                synchronized (progressSync) {
-                    activeProgress.remove(impl);
-                }
-            }
         }
 
     }

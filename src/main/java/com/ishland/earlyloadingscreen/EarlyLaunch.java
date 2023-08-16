@@ -31,7 +31,9 @@ public class EarlyLaunch {
         }
         System.out.println(String.format("Loading EarlyLoadingScreen early on ClassLoader %s", classLoader.getClass().getName()));
 
+        final String earlyLaunchProperty = "earlyloadingscreen.duringEarlyLaunch";
         try {
+            System.setProperty(earlyLaunchProperty, "true");
             final ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
             unlockLibraryOnKnot(contextClassLoader);
             if (contextClassLoader.getClass().isInstance(classLoader)) {
@@ -55,6 +57,7 @@ public class EarlyLaunch {
                 System.out.println("[EarlyLoadingScreen] Relaunched on context classloader");
             }
         } catch (Throwable t) {
+            System.clearProperty(earlyLaunchProperty);
             System.out.println("[EarlyLoadingScreen] Failed to launch early");
             t.printStackTrace();
         }

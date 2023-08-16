@@ -1,5 +1,6 @@
 package com.ishland.earlyloadingscreen.mixin.progress;
 
+import com.ishland.earlyloadingscreen.LoadingProgressManager;
 import com.ishland.earlyloadingscreen.LoadingScreenManager;
 import com.mojang.datafixers.util.Pair;
 import net.minecraft.block.Block;
@@ -43,17 +44,17 @@ public abstract class MixinModelLoader {
     @Shadow @Final private static Map<Identifier, StateManager<Block, BlockState>> STATIC_DEFINITIONS;
     @Shadow @Final private Map<Identifier, UnbakedModel> modelsToBake;
     @Nullable
-    private LoadingScreenManager.RenderLoop.ProgressHolder modelLoadProgressHolder;
+    private LoadingProgressManager.ProgressHolder modelLoadProgressHolder;
     @Nullable
-    private LoadingScreenManager.RenderLoop.ProgressHolder modelAdditionalLoadProgressHolder;
+    private LoadingProgressManager.ProgressHolder modelAdditionalLoadProgressHolder;
     private int modelLoadProgress = 0;
     private int modelLoadTotalEstimate;
     private int modelDependencyResolveProgress = 0;
 
     @Inject(method = "<init>", at = @At(value = "INVOKE", target = "Ljava/lang/Object;<init>()V", shift = At.Shift.AFTER))
     private void earlyInit(CallbackInfo ci) {
-        modelLoadProgressHolder = LoadingScreenManager.tryCreateProgressHolder();
-        modelAdditionalLoadProgressHolder = LoadingScreenManager.tryCreateProgressHolder();
+        modelLoadProgressHolder = LoadingProgressManager.tryCreateProgressHolder();
+        modelAdditionalLoadProgressHolder = LoadingProgressManager.tryCreateProgressHolder();
         if (modelLoadProgressHolder != null) {
             modelLoadProgressHolder.update(() -> "Preparing models...");
         }
@@ -97,7 +98,7 @@ public abstract class MixinModelLoader {
 
     @Redirect(method = "upload", at = @At(value = "INVOKE", target = "Ljava/util/Set;forEach(Ljava/util/function/Consumer;)V"))
     private void redirectIteration(Set<Identifier> instance, Consumer<Identifier> consumer) {
-        try (LoadingScreenManager.RenderLoop.ProgressHolder progressHolder = LoadingScreenManager.tryCreateProgressHolder()) {
+        try (LoadingProgressManager.ProgressHolder progressHolder = LoadingProgressManager.tryCreateProgressHolder()) {
             int index = 0;
             int size = instance.size();
             for (Identifier identifier : instance) {

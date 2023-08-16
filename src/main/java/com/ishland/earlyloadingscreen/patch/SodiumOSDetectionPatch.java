@@ -1,5 +1,7 @@
 package com.ishland.earlyloadingscreen.patch;
 
+import com.ishland.earlyloadingscreen.LoadingProgressManager;
+import com.ishland.earlyloadingscreen.LoadingScreenManager;
 import com.ishland.earlyloadingscreen.SharedConstants;
 import com.ishland.earlyloadingscreen.util.RemapUtil;
 import net.fabricmc.loader.api.FabricLoader;
@@ -20,24 +22,51 @@ public class SodiumOSDetectionPatch implements BytecodeTransformer {
 
     private static final SodiumOSDetectionPatch INSTANCE = new SodiumOSDetectionPatch();
 
+    public static final boolean INITIALIZED;
+
     private SodiumOSDetectionPatch() {
     }
 
     static {
-        initTransformer();
+        INITIALIZED = initTransformer();
     }
 
     public static void init() {
         // intentionally empty, just to trigger static initialization
     }
 
-    private static void initTransformer() {
+    private static boolean initTransformer() {
         Instrumentation inst = PatchUtil.instrumentation;
         if (inst == null) {
-            SharedConstants.LOGGER.warn("Instrumentation unavailable, entrypoint information will not be available");
-            return;
+            SharedConstants.LOGGER.warn("Instrumentation unavailable, sodium workarounds will not be available");
+            LoadingProgressManager.showMessageAsProgress("Instrumentation unavailable, sodium workarounds may not be available");
+            return false;
         }
         PatchUtil.transformers.add(INSTANCE);
+        if (!(tryRetransform(inst, "me.jellysquid.mods.sodium.client.util.workarounds.Workarounds") &&
+              tryRetransform(inst, "me.jellysquid.mods.sodium.client.util.workarounds.driver.nvidia.NvidiaWorkarounds") &&
+              tryRetransform(inst, "me.jellysquid.mods.sodium.client.util.workarounds.probe.GraphicsAdapterProbe"))) {
+            SharedConstants.LOGGER.warn("Failed to retransform sodium workarounds, sodium workarounds will not be available");
+            LoadingProgressManager.showMessageAsProgress("Failed to retransform sodium workarounds, sodium workarounds may not be available");
+            PatchUtil.transformers.remove(INSTANCE);
+            tryRetransform(inst, "me.jellysquid.mods.sodium.client.util.workarounds.Workarounds");
+            tryRetransform(inst, "me.jellysquid.mods.sodium.client.util.workarounds.driver.nvidia.NvidiaWorkarounds");
+            tryRetransform(inst, "me.jellysquid.mods.sodium.client.util.workarounds.probe.GraphicsAdapterProbe");
+            return false;
+        }
+        return true;
+    }
+
+    private static boolean tryRetransform(Instrumentation inst, String name) {
+        try {
+            inst.retransformClasses(Class.forName(name));
+            return true;
+        } catch (ClassNotFoundException e) {
+            return true;
+        } catch (Throwable t) {
+            SharedConstants.LOGGER.warn("Failed to retransform class %s".formatted(name), t);
+            return false;
+        }
     }
 
     @Override

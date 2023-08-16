@@ -1,5 +1,6 @@
 package com.ishland.earlyloadingscreen.mixin;
 
+import com.ishland.earlyloadingscreen.LoadingProgressManager;
 import com.ishland.earlyloadingscreen.LoadingScreenManager;
 import com.ishland.earlyloadingscreen.mixin.access.IMinecraftClient;
 import com.ishland.earlyloadingscreen.mixin.access.ISimpleResourceReload;
@@ -24,12 +25,12 @@ public class MixinSplashOverlay {
 
     @Shadow @Final private ResourceReload reload;
 
-    private LoadingScreenManager.RenderLoop.ProgressHolder progressHolder;
+    private LoadingProgressManager.ProgressHolder progressHolder;
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(CallbackInfo ci) {
         if (this.reload instanceof SimpleResourceReload<?>) {
-            LoadingScreenManager.RenderLoop.ProgressHolder progressHolder = LoadingScreenManager.tryCreateProgressHolder();
+            LoadingProgressManager.ProgressHolder progressHolder = LoadingProgressManager.tryCreateProgressHolder();
             if (progressHolder != null) {
                 this.progressHolder = progressHolder;
                 this.reload.whenComplete().thenRun(progressHolder::close);
