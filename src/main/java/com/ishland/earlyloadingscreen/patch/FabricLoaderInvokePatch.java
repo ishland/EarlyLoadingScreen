@@ -5,7 +5,7 @@ import com.ishland.earlyloadingscreen.LoadingScreenManager;
 import com.ishland.earlyloadingscreen.SharedConstants;
 import com.ishland.earlyloadingscreen.platform_cl.AppLoaderAccessSupport;
 import com.ishland.earlyloadingscreen.util.AppLoaderUtil;
-import net.fabricmc.loader.impl.entrypoint.EntrypointUtils;
+import net.fabricmc.loader.impl.FabricLoaderImpl;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AbstractInsnNode;
@@ -67,9 +67,9 @@ public class FabricLoaderInvokePatch implements BytecodeTransformer {
         PatchUtil.transformers.add(INSTANCE);
         try {
             inst.retransformClasses(Class.forName("net.fabricmc.loader.impl.launch.knot.KnotClassDelegate"));
-            inst.retransformClasses(EntrypointUtils.class);
+            inst.retransformClasses(FabricLoaderImpl.class);
         } catch (Throwable t) {
-            SharedConstants.LOGGER.warn("Failed to retransform EntrypointUtils, attempting to revert changes", t);
+            SharedConstants.LOGGER.warn("Failed to retransform FabricLoaderImpl, attempting to revert changes", t);
             LoadingProgressManager.showMessageAsProgress("Failed to retransform EntrypointUtils, entrypoint information will not be available");
             PatchUtil.transformers.remove(INSTANCE);
             try {
@@ -78,9 +78,9 @@ public class FabricLoaderInvokePatch implements BytecodeTransformer {
                 SharedConstants.LOGGER.warn("Failed to revert changes to EntrypointUtils", t2);
             }
             try {
-                inst.retransformClasses(EntrypointUtils.class);
+                inst.retransformClasses(FabricLoaderImpl.class);
             } catch (Throwable t2) {
-                SharedConstants.LOGGER.warn("Failed to revert changes to EntrypointUtils", t2);
+                SharedConstants.LOGGER.warn("Failed to revert changes to FabricLoaderImpl", t2);
             }
         }
     }
@@ -99,18 +99,18 @@ public class FabricLoaderInvokePatch implements BytecodeTransformer {
     @Override
     public boolean transform(String className, ClassNode node) {
 
-        // patch net.fabricmc.loader.impl.entrypoint.EntrypointUtils
-        if (className.equals("net/fabricmc/loader/impl/entrypoint/EntrypointUtils")) {
-            SharedConstants.LOGGER.info("Patching EntrypointUtils for entrypoint information");
+        // patch net/fabricmc/loader/impl/FabricLoaderImpl
+        if (className.equals("net/fabricmc/loader/impl/FabricLoaderImpl")) {
+            SharedConstants.LOGGER.info("Patching FabricLoaderImpl for entrypoint information");
 
             for (MethodNode method : node.methods) {
-                // Lnet/fabricmc/loader/impl/entrypoint/EntrypointUtils;invoke0(Ljava/lang/String;Ljava/lang/Class;Ljava/util/function/Consumer;)V
-                if (method.name.equals("invoke0") && method.desc.equals("(Ljava/lang/String;Ljava/lang/Class;Ljava/util/function/Consumer;)V")) {
-                    SharedConstants.LOGGER.info("Patching EntrypointUtils.invoke0");
+                // Lnet/fabricmc/loader/impl/FabricLoaderImpl;invokeEntrypoints(Ljava/lang/String;Ljava/lang/Class;Ljava/util/function/Consumer;)V
+                if (method.name.equals("invokeEntrypoints") && method.desc.equals("(Ljava/lang/String;Ljava/lang/Class;Ljava/util/function/Consumer;)V")) {
+                    SharedConstants.LOGGER.info("Patching FabricLoaderImpl.invokeEntrypoints");
 
                     // add local var for progress tracker
                     // use the same range as the first local var
-                    final LocalVariableNode firstLocalVar = method.localVariables.get(0);
+                    final LocalVariableNode firstLocalVar = method.localVariables.get(0); // var0 is `this`
                     final int progressTrackerIndex = method.maxLocals++;
                     method.visitLocalVariable(
                             "early_loading_screen$progressTracker",
@@ -199,7 +199,7 @@ public class FabricLoaderInvokePatch implements BytecodeTransformer {
                                 iterator.add(new VarInsnNode(Opcodes.ALOAD, progressTrackerIndex));
                                 iterator.add(new VarInsnNode(Opcodes.ALOAD, listVarIndex));
                                 iterator.add(new VarInsnNode(Opcodes.ALOAD, iteratorVarIndex));
-                                iterator.add(new VarInsnNode(Opcodes.ALOAD, 0));
+                                iterator.add(new VarInsnNode(Opcodes.ALOAD, 1)); // arg1
                                 iterator.add(new MethodInsnNode(
                                         Opcodes.INVOKESTATIC,
                                         "com/ishland/earlyloadingscreen/platform_cl/AppLoaderAccessSupport",
