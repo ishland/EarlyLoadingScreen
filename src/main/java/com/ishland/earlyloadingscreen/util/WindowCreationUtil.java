@@ -6,7 +6,6 @@ import com.ishland.earlyloadingscreen.api.WindowCreationListener;
 import com.ishland.earlyloadingscreen.patch.SodiumOSDetectionPatch;
 import io.netty.util.internal.PlatformDependent;
 import net.fabricmc.loader.api.FabricLoader;
-import net.fabricmc.loader.impl.entrypoint.EntrypointUtils;
 import org.lwjgl.glfw.GLFW;
 
 import java.lang.reflect.Field;
@@ -18,14 +17,14 @@ import java.util.concurrent.atomic.AtomicReference;
 public class WindowCreationUtil {
 
     public static long warpGlfwCreateWindow(int width, int height, CharSequence title, long monitor, long share) {
-        EntrypointUtils.invoke("els_before_window_creation", WindowCreationListener.class, WindowCreationListener::beforeWindowCreation);
+        FabricLoader.getInstance().invokeEntrypoints("els_before_window_creation", WindowCreationListener.class, WindowCreationListener::beforeWindowCreation);
         sodiumHookInit();
         sodiumHook(false);
         try {
             return GLFW.glfwCreateWindow(width, height, title, monitor, share);
         } finally {
             sodiumHook(true);
-            EntrypointUtils.invoke("els_after_window_creation", WindowCreationListener.class, WindowCreationListener::afterWindowCreation);
+            FabricLoader.getInstance().invokeEntrypoints("els_after_window_creation", WindowCreationListener.class, WindowCreationListener::afterWindowCreation);
         }
     }
 
