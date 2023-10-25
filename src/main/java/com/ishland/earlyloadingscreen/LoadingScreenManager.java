@@ -404,7 +404,12 @@ public class LoadingScreenManager {
                 LOGGER.error("Failed to render early window, exiting", t);
                 this.renderLoop = null;
             } finally {
-                Callbacks.glfwFreeCallbacks(handle);
+                final long handle1 = handle;
+                if (handle1 != 0L) {
+                    Callbacks.glfwFreeCallbacks(handle1);
+                } else {
+                    LOGGER.warn("Early exit");
+                }
                 GLFW.glfwMakeContextCurrent(0L);
                 needsCreateWindow = false;
                 initialized = true;
