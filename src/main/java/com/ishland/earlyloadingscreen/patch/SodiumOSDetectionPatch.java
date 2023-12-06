@@ -45,12 +45,14 @@ public class SodiumOSDetectionPatch implements BytecodeTransformer {
         PatchUtil.transformers.add(INSTANCE);
         if (!(tryRetransform(inst, "me.jellysquid.mods.sodium.client.util.workarounds.Workarounds") &&
               tryRetransform(inst, "me.jellysquid.mods.sodium.client.util.workarounds.driver.nvidia.NvidiaWorkarounds") &&
+              tryRetransform(inst, "me.jellysquid.mods.sodium.client.util.workarounds.driver.nvidia.NvidiaWorkarounds$1") &&
               tryRetransform(inst, "me.jellysquid.mods.sodium.client.util.workarounds.probe.GraphicsAdapterProbe"))) {
             SharedConstants.LOGGER.warn("Failed to retransform sodium workarounds, sodium workarounds will not be available");
             LoadingProgressManager.showMessageAsProgress("Failed to retransform sodium workarounds, sodium workarounds may not be available");
             PatchUtil.transformers.remove(INSTANCE);
             tryRetransform(inst, "me.jellysquid.mods.sodium.client.util.workarounds.Workarounds");
             tryRetransform(inst, "me.jellysquid.mods.sodium.client.util.workarounds.driver.nvidia.NvidiaWorkarounds");
+            tryRetransform(inst, "me.jellysquid.mods.sodium.client.util.workarounds.driver.nvidia.NvidiaWorkarounds$1");
             tryRetransform(inst, "me.jellysquid.mods.sodium.client.util.workarounds.probe.GraphicsAdapterProbe");
             return false;
         }
@@ -73,6 +75,7 @@ public class SodiumOSDetectionPatch implements BytecodeTransformer {
     public boolean transform(String className, ClassNode node) {
         if (className.equals("me/jellysquid/mods/sodium/client/util/workarounds/Workarounds") ||
             className.equals("me/jellysquid/mods/sodium/client/util/workarounds/driver/nvidia/NvidiaWorkarounds") ||
+            className.equals("me/jellysquid/mods/sodium/client/util/workarounds/driver/nvidia/NvidiaWorkarounds$1") ||
             className.equals("me/jellysquid/mods/sodium/client/util/workarounds/probe/GraphicsAdapterProbe")) {
 
             SharedConstants.LOGGER.info("Patching %s to allow early usage".formatted(className));
@@ -117,6 +120,15 @@ public class SodiumOSDetectionPatch implements BytecodeTransformer {
                                 methodInsnNode.name.equals(resolver.mapMethodName(intermediary, "net.minecraft.class_156$class_158", "ordinal", "()I")) &&
                                 methodInsnNode.desc.equals(RemapUtil.remapMethodDescriptor("()I"))) {
                                 methodInsnNode.owner = "com/ishland/earlyloadingscreen/util/OSDetectionUtil$OperatingSystem";
+                            }
+
+                            // replace Util$OperatingSystem.values() with OSDetectionUtil$OperatingSystem.values()
+                            if (methodInsnNode.getOpcode() == Opcodes.INVOKESTATIC &&
+                                methodInsnNode.owner.equals(resolver.mapClassName(intermediary, "net.minecraft.class_156$class_158").replace('.', '/')) &&
+                                methodInsnNode.name.equals(resolver.mapMethodName(intermediary, "net.minecraft.class_156$class_158", "values", "()[Lnet/minecraft/class_156$class_158;")) &&
+                                methodInsnNode.desc.equals(RemapUtil.remapMethodDescriptor("()[Lnet/minecraft/class_156$class_158;"))) {
+                                methodInsnNode.owner = "com/ishland/earlyloadingscreen/util/OSDetectionUtil$OperatingSystem";
+                                methodInsnNode.desc = "()[Lcom/ishland/earlyloadingscreen/util/OSDetectionUtil$OperatingSystem;";
                             }
                         }
 
