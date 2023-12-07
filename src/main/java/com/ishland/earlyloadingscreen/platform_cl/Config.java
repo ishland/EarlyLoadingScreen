@@ -20,6 +20,7 @@ public class Config {
     public static final boolean REUSE_EARLY_WINDOW;
     public static final boolean ENABLE_ENTRYPOINT_INFORMATION;
     public static final boolean ENABLE_MIXIN_PRETRANSFORM;
+    public static final boolean ALLOW_EARLY_WINDOW_CLOSE;
     public static final LaunchPoint WINDOW_CREATION_POINT;
     public static final List<String> DISABLED_MIXINS = new ArrayList<>();
 
@@ -41,6 +42,7 @@ public class Config {
         REUSE_EARLY_WINDOW = !PlatformUtil.IS_WINDOWS && getBoolean(properties, newProperties, "reuse_early_window", true, sb);
         ENABLE_ENTRYPOINT_INFORMATION = getBoolean(properties, newProperties, "enable_entrypoint_information", true, sb);
         ENABLE_MIXIN_PRETRANSFORM = getBoolean(properties, newProperties, "enable_mixin_pretransform", false, sb);
+        ALLOW_EARLY_WINDOW_CLOSE = getBoolean(properties, newProperties, "allow_early_window_close", true, sb);
         final LaunchPoint defaultPoint = FabricLoader.getInstance().isModLoaded("immediatelyfast") ? LaunchPoint.mixinLoad : LaunchPoint.postModLoading;
         WINDOW_CREATION_POINT = getEnum(LaunchPoint.class, properties, newProperties, "window_creation_point", defaultPoint, sb);
         for (Map.Entry<Object, Object> entry : properties.entrySet()) {

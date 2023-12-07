@@ -375,7 +375,13 @@ public class LoadingScreenManager {
                         }
                     }
                     if (GLFW.glfwWindowShouldClose(handle)) {
-                        GLFW.glfwSetWindowShouldClose(handle, false);
+                       if (Config.ALLOW_EARLY_WINDOW_CLOSE) {
+                           GLFW.glfwDestroyWindow(handle);
+                           LOGGER.info("Early window closed");
+                           System.exit(0);
+                       } else {
+                           GLFW.glfwSetWindowShouldClose(handle, false);
+                       }
                     }
                     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
