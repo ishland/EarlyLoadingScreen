@@ -36,7 +36,8 @@ This controls whether the early screen is reused as the game window.
 
 ### `enable_mixin_pretransform`
 Available options: `true` `false`
-Default: `true`
+Default: `false`
 
 This controls whether mixins apply runs early. 
+May cause issues with mods that doesn't handle classloading properly.
 
