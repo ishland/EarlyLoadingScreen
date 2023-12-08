@@ -41,3 +41,9 @@ Default: `false`
 This controls whether mixins apply runs early. 
 May cause issues with mods that doesn't handle classloading properly.
 
+### `allow_early_window_close`
+Available options: `true` `false`
+Default: `true`
+
+This controls whether the early screen can be closed.
+Closing the early screen will cause the game to exit immediately.
