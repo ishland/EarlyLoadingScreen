@@ -8,6 +8,7 @@ import com.ishland.earlyloadingscreen.platform_cl.Config;
 import com.ishland.earlyloadingscreen.platform_cl.PlatformUtil;
 import com.ishland.earlyloadingscreen.render.GLText;
 import com.ishland.earlyloadingscreen.util.WindowCreationUtil;
+import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.impl.FabricLoaderImpl;
 import net.fabricmc.loader.impl.util.Arguments;
 import org.jetbrains.annotations.NotNull;
@@ -207,7 +208,13 @@ public class LoadingScreenManager {
         } catch (Throwable t) {
             LOGGER.error("Failed to load window configuration", t);
         }
-        final long handle = WindowCreationUtil.warpGlfwCreateWindow(configuredWidth, configuredHeight, "Minecraft - initializing mods...", 0L, 0L);
+        String minecraftVersion = "Unknown";
+        try {
+            minecraftVersion = FabricLoader.getInstance().getModContainer("minecraft").map(modContainer -> modContainer.getMetadata().getVersion().getFriendlyString()).get();
+        } catch (Throwable t) {
+            LOGGER.error("Failed to load Minecraft version", t);
+        }
+        final long handle = WindowCreationUtil.warpGlfwCreateWindow(configuredWidth, configuredHeight, "Minecraft* %s".formatted(minecraftVersion), 0L, 0L);
         // Center window
 //        final long monitor = glfwGetPrimaryMonitor();
 //        if (monitor != 0L) {
