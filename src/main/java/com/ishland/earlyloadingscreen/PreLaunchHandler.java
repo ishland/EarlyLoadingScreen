@@ -10,7 +10,6 @@ public class PreLaunchHandler implements PreLaunchEntrypoint {
         System.clearProperty("earlyloadingscreen.duringEarlyLaunch");
         if (Config.WINDOW_CREATION_POINT.ordinal() <= LaunchPoint.preLaunch.ordinal()) {
             Launch.initAndCreateWindow(false);
-            LoadingScreenManager.windowEventLoop.setWindowTitle("Minecraft - Launching...");
         }
     }
 }
