@@ -43,7 +43,7 @@ public abstract class MixinMinecraftClient {
         }
         if (Config.WINDOW_CREATION_POINT.ordinal() <= LaunchPoint.mcEarly.ordinal()) {
             Launch.initAndCreateWindow(false);
-            LoadingScreenManager.windowEventLoop.setWindowTitle(windowTitle + " - Loading...");
+            LoadingScreenManager.windowEventLoop.setWindowTitle(windowTitle);
         }
     }
 
