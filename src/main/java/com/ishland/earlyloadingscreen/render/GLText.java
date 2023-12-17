@@ -245,12 +245,6 @@ public class GLText {
     }
 
     public Closeable gltBeginDraw() {
-        final boolean isBlendEnabled = glIsEnabled(GL_BLEND);
-
-        if (!isBlendEnabled) {
-            glEnable(GL_BLEND);
-        }
-
         glUseProgram(_gltText2DShader);
 
         glActiveTexture(GL_TEXTURE0);
@@ -258,9 +252,6 @@ public class GLText {
         return () -> {
             glUseProgram(0);
             glBindTexture(GL_TEXTURE_2D, 0);
-            if (!isBlendEnabled) {
-                glDisable(GL_BLEND);
-            }
         };
     }
 
@@ -1098,7 +1089,10 @@ public class GLText {
 
             void main()
             {
-                fragColor = texture(diffuse, fTexCoord) * color;
+                vec4 outColor = texture(diffuse, fTexCoord) * color;
+                if (outColor.a < 0.01)
+                    discard;
+                fragColor = outColor;
             }
             """;
 
