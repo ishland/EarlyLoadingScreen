@@ -70,6 +70,7 @@ public abstract class MixinModelLoader {
         this.modelLoadProgress ++;
         if (modelLoadProgressHolder != null) {
             modelLoadProgressHolder.update(() -> String.format("Loading model (%d/~%d): %s", this.modelLoadProgress, this.modelLoadTotalEstimate, modelId));
+            modelLoadProgressHolder.updateProgress(() -> (float) this.modelLoadProgress / (float) this.modelLoadTotalEstimate);
         }
     }
 
@@ -77,7 +78,9 @@ public abstract class MixinModelLoader {
     private void progressModelResolution(UnbakedModel model, CallbackInfo ci) {
         this.modelDependencyResolveProgress ++;
         if (modelLoadProgressHolder != null) {
-            modelLoadProgressHolder.update(() -> String.format("Resolving model dependencies (%d/%d): %s", this.modelDependencyResolveProgress, this.modelsToBake.size(), model));
+            final int size = this.modelsToBake.size();
+            modelLoadProgressHolder.update(() -> String.format("Resolving model dependencies (%d/%d): %s", this.modelDependencyResolveProgress, size, model));
+            modelLoadProgressHolder.updateProgress(() -> (float) this.modelDependencyResolveProgress / (float) size);
         }
     }
 
@@ -90,6 +93,7 @@ public abstract class MixinModelLoader {
                 if (progressHolder != null) {
                     int finalIndex = index;
                     progressHolder.update(() -> String.format("Baking model (%d/%d): %s", finalIndex, size, identifier));
+                    progressHolder.updateProgress(() -> (float) finalIndex / (float) size);
                 }
                 index++;
                 consumer.accept(identifier);
