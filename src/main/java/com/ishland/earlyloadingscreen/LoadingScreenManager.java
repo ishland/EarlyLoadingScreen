@@ -7,6 +7,7 @@ import com.ishland.earlyloadingscreen.platform_cl.AppLoaderAccessSupport;
 import com.ishland.earlyloadingscreen.platform_cl.Config;
 import com.ishland.earlyloadingscreen.platform_cl.PlatformUtil;
 import com.ishland.earlyloadingscreen.render.GLText;
+import com.ishland.earlyloadingscreen.render.Simple2DDraw;
 import com.ishland.earlyloadingscreen.util.WindowCreationUtil;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.impl.FabricLoaderImpl;
@@ -27,9 +28,11 @@ import java.io.IOException;
 import java.lang.ref.Cleaner;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -45,10 +48,17 @@ import static com.ishland.earlyloadingscreen.render.GLText.GLT_LEFT;
 import static com.ishland.earlyloadingscreen.render.GLText.GLT_RIGHT;
 import static com.ishland.earlyloadingscreen.render.GLText.GLT_TOP;
 import static com.ishland.earlyloadingscreen.render.GLText.gltCreateText;
+import static com.ishland.earlyloadingscreen.render.GLText.gltGetLineHeight;
+import static com.ishland.earlyloadingscreen.render.GLText.gltGetTextHeight;
 import static com.ishland.earlyloadingscreen.render.GLText.gltSetText;
 import static org.lwjgl.glfw.GLFW.glfwGetFramebufferSize;
 import static org.lwjgl.glfw.GLFW.glfwGetWindowSize;
 import static org.lwjgl.glfw.GLFW.glfwPollEvents;
+import static org.lwjgl.opengl.GL11.GL_BLEND;
+import static org.lwjgl.opengl.GL11.GL_CULL_FACE;
+import static org.lwjgl.opengl.GL11.GL_DEPTH;
+import static org.lwjgl.opengl.GL11.glDisable;
+import static org.lwjgl.opengl.GL11.glEnable;
 import static org.lwjgl.opengl.GL11.glViewport;
 import static org.lwjgl.opengl.GL32.GL_COLOR_BUFFER_BIT;
 import static org.lwjgl.opengl.GL32.GL_DEPTH_BUFFER_BIT;
@@ -270,11 +280,36 @@ public class LoadingScreenManager {
         public final GLText.GLTtext memoryUsage = gltCreateText();
         public final GLText.GLTtext fpsText = gltCreateText();
         private final GLText.GLTtext progressText = gltCreateText();
+        public Simple2DDraw draw = new Simple2DDraw();
+        public final Simple2DDraw.BufferBuilder progressBars = draw.new BufferBuilder();
 
         public void render(int width, int height, float scale) {
 //            glfwGetFramebufferSize(glfwGetCurrentContext(), width, height);
 //            glViewport(0, 0, width[0], height[0]);
             glt.gltViewport(width, height);
+            draw.viewport(width, height);
+
+            glEnable(GL_BLEND);
+
+            final CopyOnWriteArrayList<LoadingProgressManager.Progress> activeProgress = LoadingProgressManager.getActiveProgress();
+            synchronized (activeProgress) {
+                progressBars.begin();
+                final ListIterator<LoadingProgressManager.Progress> iterator = activeProgress.listIterator(activeProgress.size());
+                float y = height;
+                final float textHeight = gltGetLineHeight(scale * 1.0F);
+                while (iterator.hasPrevious()) {
+                    final LoadingProgressManager.Progress progress = iterator.previous();
+                    if (progress.get().isBlank()) continue;
+                    y -= textHeight;
+                    final float progress1 = progress.getProgress();
+                    if (progress1 > 0.0f) {
+                        progressBars.rect(0, y, progress1 * width, textHeight, 1, 1, 1, 1);
+                    }
+//                    y -= 1;
+                }
+                progressBars.end();
+                progressBars.draw();
+            }
 
             try (final Closeable ignored = glt.gltBeginDraw()) {
                 glt.gltColor(1.0f, 1.0f, 1.0f, 1.0f);
@@ -299,7 +334,6 @@ public class LoadingScreenManager {
                 );
 
                 StringBuilder sb = new StringBuilder();
-                final Set<LoadingProgressManager.Progress> activeProgress = LoadingProgressManager.getActiveProgress();
                 synchronized (activeProgress) {
                     for (LoadingProgressManager.Progress progress : activeProgress) {
                         final String str = progress.get();
@@ -319,6 +353,8 @@ public class LoadingScreenManager {
             } catch (IOException e) {
                 throw new RuntimeException(e); // shouldn't happen
             }
+
+            glDisable(GL_BLEND);
         }
 
         private void terminate() {

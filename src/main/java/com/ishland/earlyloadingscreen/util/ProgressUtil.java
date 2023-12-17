@@ -19,6 +19,7 @@ public class ProgressUtil {
                 future.whenComplete((v, throwable) -> {
                     final int i = counter.incrementAndGet();
                     holder.update(() -> String.format("%s... (%d/%d)", name, i, total));
+                    holder.updateProgress(() -> (float) i / (float) total);
                 });
             }
             combined.whenComplete((vs, throwable) -> holder.close());
