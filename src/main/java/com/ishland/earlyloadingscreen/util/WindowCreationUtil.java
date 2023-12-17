@@ -41,8 +41,8 @@ public class WindowCreationUtil {
             final Class<?> graphicsAdapterProbeClazz;
             final Class<?> workaroundsClazz;
             try {
-                graphicsAdapterProbeClazz = Class.forName("me.jellysquid.mods.sodium.client.util.workarounds.probe.GraphicsAdapterProbe");
-                workaroundsClazz = Class.forName("me.jellysquid.mods.sodium.client.util.workarounds.Workarounds");
+                graphicsAdapterProbeClazz = locateClass("me.jellysquid.mods.sodium.client.util.workarounds.probe.GraphicsAdapterProbe", "me.jellysquid.mods.sodium.client.compatibility.environment.probe.GraphicsAdapterProbe");
+                workaroundsClazz = locateClass("me.jellysquid.mods.sodium.client.util.workarounds.Workarounds", "me.jellysquid.mods.sodium.client.compatibility.workarounds.Workarounds");
             } catch (Throwable t) {
                 final String msg = "Failed to find Sodium workarounds, skipping sodium hook init";
                 if (FabricLoader.getInstance().isDevelopmentEnvironment() || Boolean.getBoolean("els.debug")) {
@@ -92,9 +92,9 @@ public class WindowCreationUtil {
         final Class<? extends Enum> workaroundsReferenceClazz;
         final Class<?> nvidiaWorkaroundsClazz;
         try {
-            workaroundsClazz = Class.forName("me.jellysquid.mods.sodium.client.util.workarounds.Workarounds");
-            workaroundsReferenceClazz = (Class<? extends Enum<?>>) Class.forName("me.jellysquid.mods.sodium.client.util.workarounds.Workarounds$Reference");
-            nvidiaWorkaroundsClazz = Class.forName("me.jellysquid.mods.sodium.client.util.workarounds.driver.nvidia.NvidiaWorkarounds");
+            workaroundsClazz = locateClass("me.jellysquid.mods.sodium.client.util.workarounds.Workarounds", "me.jellysquid.mods.sodium.client.compatibility.workarounds.Workarounds");
+            workaroundsReferenceClazz = (Class<? extends Enum<?>>) locateClass("me.jellysquid.mods.sodium.client.util.workarounds.Workarounds$Reference", "me.jellysquid.mods.sodium.client.compatibility.workarounds.Workarounds$Reference");
+            nvidiaWorkaroundsClazz = locateClass("me.jellysquid.mods.sodium.client.util.workarounds.driver.nvidia.NvidiaWorkarounds", "me.jellysquid.mods.sodium.client.compatibility.workarounds.nvidia.NvidiaWorkarounds");
         } catch (Throwable e) {
             final String msg = "Failed to find Sodium workarounds, skipping sodium hook";
             if (FabricLoader.getInstance().isDevelopmentEnvironment() || Boolean.getBoolean("els.debug")) {
@@ -119,6 +119,16 @@ public class WindowCreationUtil {
         } catch (Throwable t) {
             t.printStackTrace();
         }
+    }
+
+    private static Class<?> locateClass(String... names) {
+        for (String name : names) {
+            try {
+                return Class.forName(name);
+            } catch (ClassNotFoundException ignored) {
+            }
+        }
+        throw new RuntimeException("Failed to locate any of " + String.join(", ", names));
     }
 
 }
