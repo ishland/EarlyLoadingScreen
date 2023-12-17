@@ -85,6 +85,7 @@ public abstract class MixinModelLoader {
         this.modelLoadProgress ++;
         if (modelLoadProgressHolder != null) {
             modelLoadProgressHolder.update(() -> String.format("Loading model (%d/~%d): %s", this.modelLoadProgress, this.modelLoadTotalEstimate, modelId));
+            modelLoadProgressHolder.updateProgress(() -> (float) this.modelLoadProgress / this.modelLoadTotalEstimate);
         }
     }
 
@@ -92,7 +93,9 @@ public abstract class MixinModelLoader {
     private void progressModelResolution(Set<Pair<String, String>> set, UnbakedModel model, CallbackInfoReturnable<Stream<SpriteIdentifier>> cir) {
         this.modelDependencyResolveProgress ++;
         if (modelLoadProgressHolder != null) {
-            modelLoadProgressHolder.update(() -> String.format("Resolving model dependencies (%d/%d): %s", this.modelDependencyResolveProgress, this.modelsToBake.size(), model));
+            final int size = this.modelsToBake.size();
+            modelLoadProgressHolder.update(() -> String.format("Resolving model dependencies (%d/%d): %s", this.modelDependencyResolveProgress, size, model));
+            modelLoadProgressHolder.updateProgress(() -> (float) this.modelDependencyResolveProgress / size);
         }
     }
 
@@ -105,6 +108,7 @@ public abstract class MixinModelLoader {
                 if (progressHolder != null) {
                     int finalIndex = index;
                     progressHolder.update(() -> String.format("Baking model (%d/%d): %s", finalIndex, size, identifier));
+                    progressHolder.updateProgress(() -> (float) finalIndex / size);
                 }
                 index++;
                 consumer.accept(identifier);
@@ -116,6 +120,7 @@ public abstract class MixinModelLoader {
     private void captureStitching(ResourceManager resourceManager, BlockColors blockColors, Profiler profiler, int mipmapLevel, CallbackInfo ci, Set<Pair<String, String>> set, Set<SpriteIdentifier> set2, Map<Identifier, List<SpriteIdentifier>> map, Iterator<Map.Entry<Identifier, List<SpriteIdentifier>>> var8, Map.Entry<Identifier, List<SpriteIdentifier>> entry, SpriteAtlasTexture spriteAtlasTexture) {
         if (modelLoadProgressHolder != null) {
             modelLoadProgressHolder.update(() -> "Stitching texture %s...".formatted(entry.getKey()));
+            modelLoadProgressHolder.updateProgress(null);
         }
     }
 

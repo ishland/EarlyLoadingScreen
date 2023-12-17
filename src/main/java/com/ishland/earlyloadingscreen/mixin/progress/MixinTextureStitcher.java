@@ -39,7 +39,10 @@ public class MixinTextureStitcher {
     @Inject(method = "stitch", at = @At(value = "INVOKE", target = "Ljava/util/Iterator;next()Ljava/lang/Object;", shift = At.Shift.BY, by = 3), locals = LocalCapture.CAPTURE_FAILSOFT)
     private void monitorStitch(CallbackInfo ci, List<TextureStitcher.Holder> list, Iterator<TextureStitcher.Holder> var2, TextureStitcher.Holder holder) {
         if (progressHolder != null && var2 instanceof ListIterator<TextureStitcher.Holder> iterator) {
-            progressHolder.update(() -> "Stitiching textures (%d/%d): %s".formatted(iterator.previousIndex(), list.size(), holder.sprite.getId()));
+            final int previousIndex = iterator.previousIndex();
+            final int size = list.size();
+            progressHolder.update(() -> "Stitiching textures (%d/%d): %s".formatted(previousIndex, size, holder.sprite.getId()));
+            progressHolder.updateProgress(() -> (float) previousIndex / size);
         }
     }
 
