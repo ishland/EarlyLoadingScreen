@@ -42,7 +42,10 @@ public class AppLoaderAccessSupport {
     @SuppressWarnings("unused")
     public static <T> void onEntrypointInvoke(EntrypointContainer<T> container, ProgressHolderAccessor progressHolder, List<?> list, ListIterator<?> listIterator, String entrypointName) {
         if (progressHolder != null) {
-            progressHolder.update(() -> String.format("Running entrypoint %s (%d/%d) for mod %s", entrypointName, listIterator.previousIndex(), list.size(), container.getProvider().getMetadata().getId()));
+            final int prevIdx = listIterator.previousIndex();
+            final int size = list.size();
+            progressHolder.update(() -> String.format("Running entrypoint %s (%d/%d) for mod %s", entrypointName, prevIdx, size, container.getProvider().getMetadata().getId()));
+            progressHolder.updateProgress(() -> prevIdx / (float) size);
         }
     }
 
@@ -52,6 +55,7 @@ public class AppLoaderAccessSupport {
 
     public interface ProgressHolderAccessor extends Closeable {
         public void update(Supplier<String> text);
+        public void updateProgress(Supplier<Float> progress);
     }
 
 }
