@@ -1,7 +1,6 @@
 package com.ishland.earlyloadingscreen.mixin.progress;
 
 import com.ishland.earlyloadingscreen.LoadingProgressManager;
-import com.ishland.earlyloadingscreen.LoadingScreenManager;
 import com.ishland.earlyloadingscreen.mixin.access.ITextureStitcherHolder;
 import net.minecraft.client.texture.TextureStitcher;
 import org.spongepowered.asm.mixin.Mixin;
@@ -36,7 +35,10 @@ public class MixinTextureStitcher<T extends TextureStitcher.Stitchable> {
     @Inject(method = "stitch", at = @At(value = "INVOKE", target = "Ljava/util/Iterator;next()Ljava/lang/Object;", shift = At.Shift.BY, by = 3), locals = LocalCapture.CAPTURE_FAILSOFT)
     private void monitorStitch(CallbackInfo ci, List<TextureStitcher.Holder<T>> list, Iterator<TextureStitcher.Holder<T>> var2, TextureStitcher.Holder<T> holder) {
         if (progressHolder != null && var2 instanceof ListIterator<TextureStitcher.Holder<T>> iterator) {
-            progressHolder.update(() -> "Stitiching textures (%d/%d): %s".formatted(iterator.previousIndex(), list.size(), ((ITextureStitcherHolder<T>) holder).getSprite().getId()));
+            final int idx = iterator.previousIndex();
+            final int size = list.size();
+            progressHolder.update(() -> "Stitiching textures (%d/%d): %s".formatted(idx, size, ((ITextureStitcherHolder<T>) holder).getSprite().getId()));
+            progressHolder.updateProgress(() -> idx / (float) size);
         }
     }
 
