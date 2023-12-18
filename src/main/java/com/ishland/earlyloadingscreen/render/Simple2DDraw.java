@@ -103,6 +103,14 @@ public class Simple2DDraw {
         public BufferBuilder() {
             vbo = glGenBuffers();
             vao = glGenVertexArrays();
+            glBindVertexArray(vao);
+            glBindBuffer(GL_ARRAY_BUFFER, vbo);
+            glVertexAttribPointer(0, 2, GL_FLOAT, false, 6 * Float.BYTES, 0);
+            glEnableVertexAttribArray(0);
+            glVertexAttribPointer(1, 4, GL_FLOAT, false, 6 * Float.BYTES, 2 * Float.BYTES);
+            glEnableVertexAttribArray(1);
+            glBindBuffer(GL_ARRAY_BUFFER, 0);
+            glBindVertexArray(0);
         }
 
         private void ensureCapacity(int capacity) {
@@ -141,9 +149,6 @@ public class Simple2DDraw {
 
         public BufferBuilder rect(float x, float y, float width, float height, float r, float g, float b, float a) {
             ensureCapacity(pos + 24);
-//            this.triangle(x, y, x + width, y, x, y + height, r, g, b, a);
-//            this.triangle(x + width, y, x + width, y + height, x, y + height, r, g, b, a);
-            // backface cull
             this.triangle(x, y, x, y + height, x + width, y, r, g, b, a);
             this.triangle(x + width, y + height, x + width, y, x, y + height, r, g, b, a);
             return this;
@@ -153,15 +158,9 @@ public class Simple2DDraw {
             if (destroyed) throw new IllegalStateException("Already destroyed");
             if (!building) throw new IllegalStateException("Not building");
             building = false;
-            glBindVertexArray(vao);
             glBindBuffer(GL_ARRAY_BUFFER, vbo);
             glBufferData(GL_ARRAY_BUFFER, buffer, GL_DYNAMIC_DRAW);
-            glVertexAttribPointer(0, 2, GL_FLOAT, false, 6 * Float.BYTES, 0);
-            glEnableVertexAttribArray(0);
-            glVertexAttribPointer(1, 4, GL_FLOAT, false, 6 * Float.BYTES, 2 * Float.BYTES);
-            glEnableVertexAttribArray(1);
             glBindBuffer(GL_ARRAY_BUFFER, 0);
-            glBindVertexArray(0);
         }
 
         public void draw() {
