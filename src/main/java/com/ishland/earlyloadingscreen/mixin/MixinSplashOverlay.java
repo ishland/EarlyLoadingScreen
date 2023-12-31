@@ -51,7 +51,7 @@ public class MixinSplashOverlay {
                 gltSetText(renderLoop.fpsText, "");
             }
             final Window window = MinecraftClient.getInstance().getWindow();
-            renderLoop.render(window.getFramebufferWidth(), window.getFramebufferHeight(), (float) window.getScaleFactor() / 2.0f);
+            renderLoop.render(window.getFramebufferWidth(), window.getFramebufferHeight(), (float) window.getScaleFactor() / 2.0f, false);
         }
     }
 

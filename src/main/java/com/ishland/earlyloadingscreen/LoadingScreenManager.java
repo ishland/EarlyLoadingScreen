@@ -7,7 +7,11 @@ import com.ishland.earlyloadingscreen.platform_cl.AppLoaderAccessSupport;
 import com.ishland.earlyloadingscreen.platform_cl.Config;
 import com.ishland.earlyloadingscreen.platform_cl.PlatformUtil;
 import com.ishland.earlyloadingscreen.render.GLText;
-import com.ishland.earlyloadingscreen.render.Simple2DDraw;
+import com.ishland.earlyloadingscreen.render.simpledraw.BufferBuilder;
+import com.ishland.earlyloadingscreen.render.simpledraw.RenderUtils;
+import com.ishland.earlyloadingscreen.render.simpledraw.SimpleDraw;
+import com.ishland.earlyloadingscreen.render.simpledraw.Texture;
+import com.ishland.earlyloadingscreen.render.simpledraw.VertexFormat;
 import com.ishland.earlyloadingscreen.util.WindowCreationUtil;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.impl.FabricLoaderImpl;
@@ -25,21 +29,16 @@ import org.lwjgl.util.tinyfd.TinyFileDialogs;
 import java.io.Closeable;
 import java.io.IOException;
 import java.lang.ref.Cleaner;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Locale;
-import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.LockSupport;
-import java.util.function.Supplier;
 
 import static com.ishland.earlyloadingscreen.SharedConstants.LOGGER;
 import static com.ishland.earlyloadingscreen.render.GLText.GLT_BOTTOM;
@@ -48,21 +47,9 @@ import static com.ishland.earlyloadingscreen.render.GLText.GLT_RIGHT;
 import static com.ishland.earlyloadingscreen.render.GLText.GLT_TOP;
 import static com.ishland.earlyloadingscreen.render.GLText.gltCreateText;
 import static com.ishland.earlyloadingscreen.render.GLText.gltGetLineHeight;
-import static com.ishland.earlyloadingscreen.render.GLText.gltGetTextHeight;
 import static com.ishland.earlyloadingscreen.render.GLText.gltSetText;
-import static org.lwjgl.glfw.GLFW.glfwGetFramebufferSize;
-import static org.lwjgl.glfw.GLFW.glfwGetWindowSize;
-import static org.lwjgl.glfw.GLFW.glfwPollEvents;
-import static org.lwjgl.opengl.GL11.GL_BLEND;
-import static org.lwjgl.opengl.GL11.GL_CULL_FACE;
-import static org.lwjgl.opengl.GL11.GL_DEPTH;
-import static org.lwjgl.opengl.GL11.glDisable;
-import static org.lwjgl.opengl.GL11.glEnable;
-import static org.lwjgl.opengl.GL11.glViewport;
-import static org.lwjgl.opengl.GL32.GL_COLOR_BUFFER_BIT;
-import static org.lwjgl.opengl.GL32.GL_DEPTH_BUFFER_BIT;
-import static org.lwjgl.opengl.GL32.glClear;
-import static org.lwjgl.opengl.GL32.glClearColor;
+import static org.lwjgl.glfw.GLFW.*;
+import static org.lwjgl.opengl.GL32.*;
 
 public class LoadingScreenManager {
 
@@ -279,16 +266,56 @@ public class LoadingScreenManager {
         public final GLText.GLTtext memoryUsage = gltCreateText();
         public final GLText.GLTtext fpsText = gltCreateText();
         private final GLText.GLTtext progressText = gltCreateText();
-        public Simple2DDraw draw = new Simple2DDraw();
-        public final Simple2DDraw.BufferBuilder progressBars = draw.new BufferBuilder();
+        public final SimpleDraw simpleDraw = new SimpleDraw();
+        public final BufferBuilder progressBars = new BufferBuilder(simpleDraw.getShader(VertexFormat.POS_COLOR), GL_TRIANGLES);
+        public final Texture backgroundTexture;
+        public final BufferBuilder background = new BufferBuilder(simpleDraw.getShader(VertexFormat.POS_TEX), GL_TRIANGLES);
 
-        public void render(int width, int height, float scale) {
+        {
+            Texture load;
+            try {
+                load = new Texture(FabricLoader.getInstance().getConfigDir().resolve(Config.EARLY_BACKGROUND_IMAGE));
+            } catch (Throwable e) {
+                if (SharedConstants.DEBUG) {
+                    LOGGER.warn("Failed to load background image", e);
+                } else {
+                    LOGGER.warn("Failed to load background image: " + e.toString());
+                }
+                load = null;
+            }
+            backgroundTexture = load;
+        }
+
+        public void render(int width, int height, float scale, boolean isEarly) {
 //            glfwGetFramebufferSize(glfwGetCurrentContext(), width, height);
 //            glViewport(0, 0, width[0], height[0]);
             glt.gltViewport(width, height);
-            draw.viewport(width, height);
+            simpleDraw.viewport2D(width, height);
 
             glEnable(GL_BLEND);
+
+            if (isEarly) {
+                if (backgroundTexture != null) {
+                    background.begin();
+                    RenderUtils.textureFillScreen(background, backgroundTexture, width, height);
+//                    RenderUtils.rectPosTexTriangles(
+//                            background,
+//                            0,
+//                            0,
+//                            width,
+//                            height,
+//                            0,
+//                            0,
+//                            1,
+//                            1
+//                    );
+                    background.upload();
+                    glActiveTexture(GL_TEXTURE0);
+                    backgroundTexture.bind();
+                    background.draw();
+                    backgroundTexture.unbind();
+                }
+            }
 
             final CopyOnWriteArrayList<LoadingProgressManager.Progress> activeProgress = LoadingProgressManager.getActiveProgress();
             synchronized (activeProgress) {
@@ -302,11 +329,21 @@ public class LoadingScreenManager {
                     y -= textHeight;
                     final float progress1 = progress.getProgress();
                     if (progress1 > 0.0f) {
-                        progressBars.rect(0, y, progress1 * width, textHeight, 1, 1, 1, 1);
+                        RenderUtils.rectPosColorTriangles(
+                                progressBars,
+                                0.0f,
+                                y,
+                                width * progress1,
+                                textHeight,
+                                1.0f,
+                                1.0f,
+                                1.0f,
+                                1.0f
+                        );
                     }
 //                    y -= 1;
                 }
-                progressBars.end();
+                progressBars.upload();
                 progressBars.draw();
             }
 
@@ -429,7 +466,7 @@ public class LoadingScreenManager {
                     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
                     glViewport(0, 0, framebufferWidth, framebufferHeight);
-                    renderLoop.render(framebufferWidth, framebufferHeight, scale);
+                    renderLoop.render(framebufferWidth, framebufferHeight, scale, true);
 
                     if (!PlatformUtil.IS_OSX) {
                         GLFW.glfwPollEvents();
