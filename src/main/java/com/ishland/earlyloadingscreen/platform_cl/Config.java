@@ -44,7 +44,7 @@ public class Config {
         ENABLE_ENTRYPOINT_INFORMATION = getBoolean(properties, newProperties, "enable_entrypoint_information", true, sb);
         ENABLE_MIXIN_PRETRANSFORM = getBoolean(properties, newProperties, "enable_mixin_pretransform", false, sb);
         ALLOW_EARLY_WINDOW_CLOSE = getBoolean(properties, newProperties, "allow_early_window_close", true, sb);
-        EARLY_BACKGROUND_IMAGE = getString(properties, newProperties, "early_background_image", "early-loading-screen.png", sb);
+        EARLY_BACKGROUND_IMAGE = getString(properties, newProperties, "early_background_image", "", sb);
         final LaunchPoint defaultPoint = FabricLoader.getInstance().isModLoaded("immediatelyfast") ? LaunchPoint.mixinLoad : LaunchPoint.postModLoading;
         WINDOW_CREATION_POINT = getEnum(LaunchPoint.class, properties, newProperties, "window_creation_point", defaultPoint, sb);
         for (Map.Entry<Object, Object> entry : properties.entrySet()) {

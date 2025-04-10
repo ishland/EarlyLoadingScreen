@@ -19,7 +19,7 @@ import java.util.function.Function;
 public class MixinBlockStatesLoader {
 
     @Inject(method = "method_65721", at = @At(value = "RETURN"), locals = LocalCapture.CAPTURE_FAILSOFT)
-    private static void captureLoadBlockStates(Function function, UnbakedModel unbakedModel, Executor executor, Map resources, CallbackInfoReturnable<CompletionStage> cir, List list) {
+    private static void captureLoadBlockStates(Function function, Executor executor, Map resources, CallbackInfoReturnable<CompletionStage> cir, List list) {
         ProgressUtil.createProgress(list, cir.getReturnValue(), "block states");
     }
 

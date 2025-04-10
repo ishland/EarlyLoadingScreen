@@ -273,14 +273,18 @@ public class LoadingScreenManager {
 
         {
             Texture load;
-            try {
-                load = new Texture(FabricLoader.getInstance().getConfigDir().resolve(Config.EARLY_BACKGROUND_IMAGE));
-            } catch (Throwable e) {
-                if (SharedConstants.DEBUG) {
-                    LOGGER.warn("Failed to load background image", e);
-                } else {
-                    LOGGER.warn("Failed to load background image: " + e.toString());
+            if (!Config.EARLY_BACKGROUND_IMAGE.isBlank()) {
+                try {
+                    load = new Texture(FabricLoader.getInstance().getConfigDir().resolve(Config.EARLY_BACKGROUND_IMAGE));
+                } catch (Throwable e) {
+                    if (SharedConstants.DEBUG) {
+                        LOGGER.warn("Failed to load background image", e);
+                    } else {
+                        LOGGER.warn("Failed to load background image: " + e.toString());
+                    }
+                    load = null;
                 }
+            } else {
                 load = null;
             }
             backgroundTexture = load;
