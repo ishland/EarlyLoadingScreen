@@ -1,3 +1,4 @@
+/*
 package com.ishland.earlyloadingscreen.mixin.progress;
 
 import com.ishland.earlyloadingscreen.LoadingProgressManager;
@@ -102,3 +103,4 @@ public abstract class MixinModelLoader {
     }
 
 }
+*/
