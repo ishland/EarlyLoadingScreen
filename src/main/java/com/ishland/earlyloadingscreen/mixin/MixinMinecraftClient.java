@@ -65,7 +65,7 @@ public abstract class MixinMinecraftClient {
             final LoadingScreenManager.RenderLoop renderLoop = LoadingScreenManager.windowEventLoop.renderLoop;
             gltSetText(renderLoop.fpsText, "%d fps".formatted(this.getCurrentFps()));
             final Window window = MinecraftClient.getInstance().getWindow();
-            renderLoop.render(window.getFramebufferWidth(), window.getFramebufferHeight(), (float) window.getScaleFactor() / 2.0f);
+            renderLoop.render(window.getFramebufferWidth(), window.getFramebufferHeight(), (float) window.getScaleFactor() / 2.0f, false);
             // restore state
             int activeTexture = GlStateManager._getActiveTexture();
             GL32.glActiveTexture(activeTexture);

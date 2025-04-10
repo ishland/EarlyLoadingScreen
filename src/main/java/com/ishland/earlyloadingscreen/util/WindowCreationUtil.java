@@ -46,7 +46,7 @@ public class WindowCreationUtil {
                 workaroundsClazz = locateClass("me.jellysquid.mods.sodium.client.util.workarounds.Workarounds", "me.jellysquid.mods.sodium.client.compatibility.workarounds.Workarounds", "net.caffeinemc.mods.sodium.client.compatibility.workarounds.Workarounds");
             } catch (Throwable t) {
                 final String msg = "Failed to find Sodium workarounds, skipping sodium hook init";
-                if (FabricLoader.getInstance().isDevelopmentEnvironment() || Boolean.getBoolean("els.debug")) {
+                if (SharedConstants.DEBUG) {
                     SharedConstants.LOGGER.warn(msg, t);
                 } else {
                     SharedConstants.LOGGER.warn(msg);
@@ -75,7 +75,7 @@ public class WindowCreationUtil {
 //                }
             } catch (Throwable t) {
                 final String msg = "Failed to init Sodium workarounds, skipping sodium hook";
-                if (FabricLoader.getInstance().isDevelopmentEnvironment() || Boolean.getBoolean("els.debug")) {
+                if (SharedConstants.DEBUG) {
                     SharedConstants.LOGGER.warn(msg, t);
                 } else {
                     SharedConstants.LOGGER.warn(msg);
@@ -98,7 +98,7 @@ public class WindowCreationUtil {
             nvidiaWorkaroundsClazz = locateClass("me.jellysquid.mods.sodium.client.util.workarounds.driver.nvidia.NvidiaWorkarounds", "me.jellysquid.mods.sodium.client.compatibility.workarounds.nvidia.NvidiaWorkarounds", "net.caffeinemc.mods.sodium.client.compatibility.workarounds.nvidia.NvidiaWorkarounds");
         } catch (Throwable e) {
             final String msg = "Failed to find Sodium workarounds, skipping sodium hook";
-            if (FabricLoader.getInstance().isDevelopmentEnvironment() || Boolean.getBoolean("els.debug")) {
+            if (SharedConstants.DEBUG) {
                 SharedConstants.LOGGER.warn(msg, e);
             } else {
                 SharedConstants.LOGGER.warn(msg);

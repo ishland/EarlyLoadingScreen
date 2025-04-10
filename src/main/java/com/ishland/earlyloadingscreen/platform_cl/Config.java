@@ -21,6 +21,7 @@ public class Config {
     public static final boolean ENABLE_ENTRYPOINT_INFORMATION;
     public static final boolean ENABLE_MIXIN_PRETRANSFORM;
     public static final boolean ALLOW_EARLY_WINDOW_CLOSE;
+    public static final String EARLY_BACKGROUND_IMAGE;
     public static final LaunchPoint WINDOW_CREATION_POINT;
     public static final List<String> DISABLED_MIXINS = new ArrayList<>();
 
@@ -43,6 +44,7 @@ public class Config {
         ENABLE_ENTRYPOINT_INFORMATION = getBoolean(properties, newProperties, "enable_entrypoint_information", true, sb);
         ENABLE_MIXIN_PRETRANSFORM = getBoolean(properties, newProperties, "enable_mixin_pretransform", false, sb);
         ALLOW_EARLY_WINDOW_CLOSE = getBoolean(properties, newProperties, "allow_early_window_close", true, sb);
+        EARLY_BACKGROUND_IMAGE = getString(properties, newProperties, "early_background_image", "early-loading-screen.png", sb);
         final LaunchPoint defaultPoint = FabricLoader.getInstance().isModLoaded("immediatelyfast") ? LaunchPoint.mixinLoad : LaunchPoint.postModLoading;
         WINDOW_CREATION_POINT = getEnum(LaunchPoint.class, properties, newProperties, "window_creation_point", defaultPoint, sb);
         for (Map.Entry<Object, Object> entry : properties.entrySet()) {
@@ -77,6 +79,18 @@ public class Config {
             newProperties.setProperty(key, String.valueOf(i));
             return i;
         } catch (NumberFormatException e) {
+            newProperties.setProperty(key, "default");
+            return def;
+        }
+    }
+
+    private static String getString(Properties properties, Properties newProperties, String key, String def, StringBuilder comment) {
+        comment.append(key).append(" default: ").append(def).append("\n");
+        final String property = properties.getProperty(key);
+        if (property != null && !property.equals("default")) {
+            newProperties.setProperty(key, property);
+            return property;
+        } else {
             newProperties.setProperty(key, "default");
             return def;
         }
