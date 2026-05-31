@@ -22,12 +22,16 @@ public class SodiumOSDetectionPatch implements BytecodeTransformer {
     private static final String[] SODIUM_WORKAROUNDS_CLASSES = new String[] {
             "me/jellysquid/mods/sodium/client/util/workarounds/Workarounds",
             "me/jellysquid/mods/sodium/client/compatibility/workarounds/Workarounds",
+            "net/caffeinemc/mods/sodium/client/compatibility/workarounds/Workarounds",
             "me/jellysquid/mods/sodium/client/util/workarounds/driver/nvidia/NvidiaWorkarounds",
             "me/jellysquid/mods/sodium/client/compatibility/workarounds/nvidia/NvidiaWorkarounds",
+            "net/caffeinemc/mods/sodium/client/compatibility/workarounds/nvidia/NvidiaWorkarounds",
             "me/jellysquid/mods/sodium/client/util/workarounds/driver/nvidia/NvidiaWorkarounds$1",
             "me/jellysquid/mods/sodium/client/compatibility/workarounds/nvidia/NvidiaWorkarounds$1",
+            "net/caffeinemc/mods/sodium/client/compatibility/workarounds/nvidia/NvidiaWorkarounds$1",
             "me/jellysquid/mods/sodium/client/util/workarounds/probe/GraphicsAdapterProbe",
             "me/jellysquid/mods/sodium/client/compatibility/environment/probe/GraphicsAdapterProbe",
+            "net/caffeinemc/mods/sodium/client/compatibility/environment/probe/GraphicsAdapterProbe",
     };
 
     public static final boolean INITIALIZED;
