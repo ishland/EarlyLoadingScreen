@@ -195,7 +195,7 @@ public class LoadingScreenManager {
     private static void throwGlError(int error, long description) {
         String string = "GLFW error " + error + ": " + MemoryUtil.memUTF8(description);
         TinyFileDialogs.tinyfd_messageBox(
-                "Minecraft", string + ".\n\nPlease make sure you have up-to-date drivers (see aka.ms/mcdriver for instructions).", "ok", "error", false
+                "Minecraft", string + ".\n\nPlease make sure you have up-to-date drivers (see aka.ms/mcdriver for instructions).", "ok", "error", 0
         );
         throw new RuntimeException(string);
     }
