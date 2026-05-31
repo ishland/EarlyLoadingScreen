@@ -7,6 +7,9 @@ pluginManagement {
         mavenCentral()
         gradlePluginPortal()
     }
+    plugins {
+        id 'net.fabricmc.fabric-loom' version '1.16-SNAPSHOT'
+    }
 }
 
-rootProject.name = "EarlyLoadingScreen" // avoid weirdness when building the project using another directory name
+rootProject.name = "EarlyLoadingScreen"

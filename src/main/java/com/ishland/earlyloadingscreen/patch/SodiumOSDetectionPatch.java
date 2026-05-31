@@ -2,18 +2,13 @@ package com.ishland.earlyloadingscreen.patch;
 
 import com.ishland.earlyloadingscreen.LoadingProgressManager;
 import com.ishland.earlyloadingscreen.SharedConstants;
-import com.ishland.earlyloadingscreen.util.RemapUtil;
-import net.fabricmc.loader.api.FabricLoader;
-import net.fabricmc.loader.api.MappingResolver;
 import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldInsnNode;
 import org.objectweb.asm.tree.LocalVariableNode;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
-import org.objectweb.asm.tree.ParameterNode;
 
 import java.lang.instrument.Instrumentation;
 import java.util.Arrays;
@@ -37,6 +32,9 @@ public class SodiumOSDetectionPatch implements BytecodeTransformer {
 
     public static final boolean INITIALIZED;
 
+    private static final String UTIL_OS = "net/minecraft/Util$OperatingSystem";
+    private static final String UTIL = "net/minecraft/Util";
+
     private SodiumOSDetectionPatch() {
     }
 
@@ -45,7 +43,6 @@ public class SodiumOSDetectionPatch implements BytecodeTransformer {
     }
 
     public static void init() {
-        // intentionally empty, just to trigger static initialization
     }
 
     private static boolean initTransformer() {
@@ -85,27 +82,23 @@ public class SodiumOSDetectionPatch implements BytecodeTransformer {
         if (Arrays.asList(SODIUM_WORKAROUNDS_CLASSES).contains(className)) {
             SharedConstants.LOGGER.info("Patching %s to allow early usage".formatted(className));
 
-            final MappingResolver resolver = FabricLoader.getInstance().getMappingResolver();
-            final String intermediary = "intermediary";
-
             for (MethodNode method : node.methods) {
 
-                final String remappedMCOS = resolver.mapClassName(intermediary, "net.minecraft.class_156$class_158").replace('.', '/');
                 {
                     final Iterator<LocalVariableNode> iterator = method.localVariables.iterator();
 
                     while (iterator.hasNext()) {
                         final LocalVariableNode localVariableNode = iterator.next();
 
-                        if (localVariableNode.desc.equals(String.format("L%s;", remappedMCOS))) {
+                        if (localVariableNode.desc.equals(String.format("L%s;", UTIL_OS))) {
                             localVariableNode.desc = "Lcom/ishland/earlyloadingscreen/util/OSDetectionUtil$OperatingSystem;";
                         }
                     }
                 }
 
-                method.desc = method.desc.replace(String.format("L%s;", remappedMCOS), "Lcom/ishland/earlyloadingscreen/util/OSDetectionUtil$OperatingSystem;");
+                method.desc = method.desc.replace(String.format("L%s;", UTIL_OS), "Lcom/ishland/earlyloadingscreen/util/OSDetectionUtil$OperatingSystem;");
                 if (method.signature != null) {
-                    method.signature = method.signature.replace(String.format("L%s;", remappedMCOS), "Lcom/ishland/earlyloadingscreen/util/OSDetectionUtil$OperatingSystem;");
+                    method.signature = method.signature.replace(String.format("L%s;", UTIL_OS), "Lcom/ishland/earlyloadingscreen/util/OSDetectionUtil$OperatingSystem;");
                 }
 
                 {
@@ -117,9 +110,9 @@ public class SodiumOSDetectionPatch implements BytecodeTransformer {
                         if (insn instanceof MethodInsnNode methodInsnNode) {
                             // replace Util.getOperatingSystem() with OSDetectionUtil.getOperatingSystem()
                             if (methodInsnNode.getOpcode() == Opcodes.INVOKESTATIC &&
-                                methodInsnNode.owner.equals(resolver.mapClassName(intermediary, "net.minecraft.class_156").replace('.', '/')) &&
-                                methodInsnNode.name.equals(resolver.mapMethodName(intermediary, "net.minecraft.class_156", "method_668", "()Lnet/minecraft/class_156$class_158;")) &&
-                                methodInsnNode.desc.equals(RemapUtil.remapMethodDescriptor("()Lnet/minecraft/class_156$class_158;"))) {
+                                methodInsnNode.owner.equals(UTIL) &&
+                                methodInsnNode.name.equals("getOperatingSystem") &&
+                                methodInsnNode.desc.equals("()L" + UTIL_OS + ";")) {
                                 methodInsnNode.owner = "com/ishland/earlyloadingscreen/util/OSDetectionUtil";
                                 methodInsnNode.name = "getOperatingSystem";
                                 methodInsnNode.desc = "()Lcom/ishland/earlyloadingscreen/util/OSDetectionUtil$OperatingSystem;";
@@ -127,40 +120,40 @@ public class SodiumOSDetectionPatch implements BytecodeTransformer {
 
                             // replace Util$OperatingSystem.ordinal() with OSDetectionUtil$OperatingSystem.ordinal()
                             if (methodInsnNode.getOpcode() == Opcodes.INVOKEVIRTUAL &&
-                                methodInsnNode.owner.equals(remappedMCOS) &&
-                                methodInsnNode.name.equals(resolver.mapMethodName(intermediary, "net.minecraft.class_156$class_158", "ordinal", "()I")) &&
-                                methodInsnNode.desc.equals(RemapUtil.remapMethodDescriptor("()I"))) {
+                                methodInsnNode.owner.equals(UTIL_OS) &&
+                                methodInsnNode.name.equals("ordinal") &&
+                                methodInsnNode.desc.equals("()I")) {
                                 methodInsnNode.owner = "com/ishland/earlyloadingscreen/util/OSDetectionUtil$OperatingSystem";
                             }
 
                             // replace Util$OperatingSystem.values() with OSDetectionUtil$OperatingSystem.values()
                             if (methodInsnNode.getOpcode() == Opcodes.INVOKESTATIC &&
-                                methodInsnNode.owner.equals(remappedMCOS) &&
-                                methodInsnNode.name.equals(resolver.mapMethodName(intermediary, "net.minecraft.class_156$class_158", "values", "()[Lnet/minecraft/class_156$class_158;")) &&
-                                methodInsnNode.desc.equals(RemapUtil.remapMethodDescriptor("()[Lnet/minecraft/class_156$class_158;"))) {
+                                methodInsnNode.owner.equals(UTIL_OS) &&
+                                methodInsnNode.name.equals("values") &&
+                                methodInsnNode.desc.equals("()[L" + UTIL_OS + ";")) {
                                 methodInsnNode.owner = "com/ishland/earlyloadingscreen/util/OSDetectionUtil$OperatingSystem";
                                 methodInsnNode.desc = "()[Lcom/ishland/earlyloadingscreen/util/OSDetectionUtil$OperatingSystem;";
                             }
 
-                            methodInsnNode.desc = methodInsnNode.desc.replace(String.format("L%s;", remappedMCOS), "Lcom/ishland/earlyloadingscreen/util/OSDetectionUtil$OperatingSystem;");
+                            methodInsnNode.desc = methodInsnNode.desc.replace(String.format("L%s;", UTIL_OS), "Lcom/ishland/earlyloadingscreen/util/OSDetectionUtil$OperatingSystem;");
                         }
 
                         if (insn instanceof FieldInsnNode fieldInsnNode) {
                             // replace Util$OperatingSystem with OSDetectionUtil$OperatingSystem
                             if (fieldInsnNode.getOpcode() == Opcodes.GETSTATIC &&
-                                fieldInsnNode.owner.equals(remappedMCOS) &&
-                                fieldInsnNode.desc.equals(RemapUtil.remapFieldDescriptor("Lnet/minecraft/class_156$class_158;"))) {
+                                fieldInsnNode.owner.equals(UTIL_OS) &&
+                                fieldInsnNode.desc.equals("L" + UTIL_OS + ";")) {
                                 fieldInsnNode.owner = "com/ishland/earlyloadingscreen/util/OSDetectionUtil$OperatingSystem";
                                 fieldInsnNode.desc = "Lcom/ishland/earlyloadingscreen/util/OSDetectionUtil$OperatingSystem;";
-                                if (fieldInsnNode.name.equals(resolver.mapFieldName(intermediary, "net.minecraft.class_156$class_158", "field_1135", "Lnet/minecraft/class_156$class_158;"))) {
+                                if (fieldInsnNode.name.equals("LINUX")) {
                                     fieldInsnNode.name = "LINUX";
-                                } else if (fieldInsnNode.name.equals(resolver.mapFieldName(intermediary, "net.minecraft.class_156$class_158", "field_1134", "Lnet/minecraft/class_156$class_158;"))) {
+                                } else if (fieldInsnNode.name.equals("SOLARIS")) {
                                     fieldInsnNode.name = "SOLARIS";
-                                } else if (fieldInsnNode.name.equals(resolver.mapFieldName(intermediary, "net.minecraft.class_156$class_158", "field_1133", "Lnet/minecraft/class_156$class_158;"))) {
+                                } else if (fieldInsnNode.name.equals("WINDOWS")) {
                                     fieldInsnNode.name = "WINDOWS";
-                                } else if (fieldInsnNode.name.equals(resolver.mapFieldName(intermediary, "net.minecraft.class_156$class_158", "field_1132", "Lnet/minecraft/class_156$class_158;"))) {
+                                } else if (fieldInsnNode.name.equals("OSX")) {
                                     fieldInsnNode.name = "OSX";
-                                } else if (fieldInsnNode.name.equals(resolver.mapFieldName(intermediary, "net.minecraft.class_156$class_158", "field_1131", "Lnet/minecraft/class_156$class_158;"))) {
+                                } else if (fieldInsnNode.name.equals("UNKNOWN")) {
                                     fieldInsnNode.name = "UNKNOWN";
                                 } else {
                                     throw new RuntimeException("Unknown field name: " + fieldInsnNode.name);

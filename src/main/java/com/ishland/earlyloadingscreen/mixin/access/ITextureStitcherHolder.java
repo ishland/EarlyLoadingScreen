@@ -1,13 +1,13 @@
 package com.ishland.earlyloadingscreen.mixin.access;
 
-import net.minecraft.client.texture.TextureStitcher;
+import net.minecraft.client.renderer.texture.Stitcher;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
-@Mixin(TextureStitcher.Holder.class)
-public interface ITextureStitcherHolder<T extends TextureStitcher.Stitchable> {
+@Mixin(Stitcher.Holder.class)
+public interface ITextureStitcherHolder<T extends Stitcher.Entry> {
 
-    @Accessor
-    T getSprite();
+    @Accessor("entry")
+    T getEntry();
 
 }

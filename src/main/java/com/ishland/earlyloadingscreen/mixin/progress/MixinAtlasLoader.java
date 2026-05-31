@@ -1,9 +1,9 @@
 package com.ishland.earlyloadingscreen.mixin.progress;
 
-import net.minecraft.client.texture.atlas.AtlasLoader;
+import net.minecraft.client.renderer.texture.atlas.SpriteSourceList;
 import org.spongepowered.asm.mixin.Mixin;
 
-@Mixin(AtlasLoader.class)
+@Mixin(SpriteSourceList.class)
 public class MixinAtlasLoader {
 
 }
